@@ -1,15 +1,15 @@
 <template>
    <div class="panel-form vm-margin">
     <Form :model="formItem" :label-width="100">
-      <FormItem label="版权全称" required>
-        <Input v-model="formItem.title" placeholder="请输入版权完整名称" style="width: 400px"></Input>
+      <FormItem label="竞品标题" required>
+        <Input v-model="formItem.title" placeholder="请输入竞品完整标题" style="width: 400px"></Input>
       </FormItem>
       
-      <FormItem label="版权信息描述" required>
+      <FormItem label="竞品描述" required>
         <Input v-model="formItem.description" type="textarea" :rows="4" style="width: 400px"></Input>
       </FormItem>
 
-      <FormItem label="版权图片" required>
+      <FormItem label="竞品照片" required>
         <Upload 
           ref="upload"
           :before-upload="handleBeforeUpload"
@@ -21,7 +21,7 @@
           accept="image/*">
           <div class="upload-area">
             <Icon type="ios-cloud-done" size="52" style="color: #1890ff"></Icon>
-            <p class="upload-text">点击上传图片</p>
+            <p class="upload-text">点击上传照片</p>
             <div v-if="previewImage" class="preview-image">
               <img :src="previewImage" alt="预览">
               <p class="file-name">{{ fileName }}</p>
@@ -30,7 +30,7 @@
         </Upload>
       </FormItem>
 
-      <FormItem label="版权类别" required>
+      <FormItem label="竞品类别" required>
         <Select v-model="formItem.category" style="width: 400px">
           <Option v-for="(cat, index) in categories" 
                  :value="cat" 
@@ -38,32 +38,45 @@
         </Select>
       </FormItem>
 
-      <!-- <FormItem label="交易起始价(ETH)" required>
+      <FormItem label="起拍价(ETH)" required>
         <InputNumber 
           v-model="formItem.startPrice" 
           :min="0.01" 
           :step="0.1"
           style="width: 400px"
-          placeholder="输入起始价格"></InputNumber>
+          placeholder="输入起拍价格"></InputNumber>
       </FormItem>
 
-      <FormItem label="数字藏品铸造时间" required>
+      <FormItem label="拍卖开始时间" required>
         <DatePicker 
-          v-model="formItem.startTime" 
+          v-model="formItem.auctionStartTime" 
           type="datetime" 
           style="width: 400px"
-          placeholder="请选择日期"></DatePicker>
+          placeholder="请选择开始时间"></DatePicker>
       </FormItem>
 
-      <FormItem label="交易持续时间" required>
-        <InputNumber 
-          v-model="formItem.duration" 
-          :min="1" 
-          :max="30"
+      <FormItem label="拍卖结束时间" required>
+        <DatePicker 
+          v-model="formItem.auctionEndTime" 
+          type="datetime" 
           style="width: 400px"
-          placeholder="输入天数"></InputNumber>
-        <span class="ml-10">天</span>
-      </FormItem> -->
+          placeholder="请选择结束时间"></DatePicker>
+      </FormItem>
+
+      <FormItem label="附带文件">
+        <Upload 
+          ref="attachmentUpload"
+          :before-upload="handleAttachmentBeforeUpload"
+          :show-upload-list="true"
+          :max-size="10240"
+          :on-exceeded-size="handleAttachmentSizeError"
+          multiple>
+          <div class="upload-area">
+            <Icon type="ios-cloud-upload" size="52" style="color: #1890ff"></Icon>
+            <p class="upload-text">点击上传附件（可选）</p>
+          </div>
+        </Upload>
+      </FormItem>
 
       <FormItem>
         <Button 
@@ -72,7 +85,7 @@
           :loading="loading"
           :disabled="!formValid"
           style="width: 400px">
-          提交版权信息
+          提交竞品信息
         </Button>
       </FormItem>
     </Form>
@@ -83,7 +96,7 @@
       title="提交成功"
       @on-ok="handleSuccessOk"
       @on-cancel="handleSuccessOk">
-      <p>您的版权信息已成功提交！</p>
+      <p>您的竞品信息已成功提交！</p>
       <p>区块链交易哈希: {{ transactionHash }}</p>
     </Modal>
   </div>
@@ -105,6 +118,7 @@ export default {
       previewImage: '',
       fileName: '',
       fileObject: null,
+      attachmentFiles: [], // 存储附件
       web3: null,
       contract: null,
       formItem: {
@@ -112,6 +126,9 @@ export default {
         description: '',
         imageData: null,
         category: '艺术品',
+        startPrice: 0.01,
+        auctionStartTime: new Date(Date.now() + 24 * 60 * 60 * 1000), // 默认开始时间为明天
+        auctionEndTime: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 默认结束时间为一周后
       }
     }
   },
@@ -120,7 +137,11 @@ export default {
       return this.formItem.title &&
              this.formItem.description &&
              this.formItem.imageData &&
-             this.fileObject
+             this.fileObject &&
+             this.formItem.startPrice &&
+             this.formItem.auctionStartTime &&
+             this.formItem.auctionEndTime &&
+             this.formItem.auctionStartTime < this.formItem.auctionEndTime
     }
   },
   async created() {
@@ -177,7 +198,7 @@ export default {
       try {
         const user = JSON.parse(userStr);
         if (user.role !== 'admin' && user.role !== 'user') {
-          this.$Message.error('您没有上传版权的权限');
+          this.$Message.error('您没有上传竞品的权限');
           this.$router.push('/');
         }
       } catch (e) {
@@ -190,6 +211,13 @@ export default {
         this.$Message.warning('请完善所有必填信息');
         return;
       }
+
+      // 检查拍卖时间是否合理
+      if (this.formItem.auctionStartTime >= this.formItem.auctionEndTime) {
+        this.$Message.warning('拍卖结束时间必须晚于开始时间');
+        return;
+      }
+
       this.loading = true;
       let blockchainSuccess = false;
       try {
@@ -200,7 +228,10 @@ export default {
           name: this.formItem.title,
           description: this.formItem.description,
           image: this.formItem.imageData,
-          category: this.formItem.category
+          category: this.formItem.category,
+          startPrice: this.formItem.startPrice,
+          auctionStartTime: this.formItem.auctionStartTime,
+          auctionEndTime: this.formItem.auctionEndTime
         };
         // 2. 尝试区块链操作
         try {
@@ -227,8 +258,8 @@ export default {
         await this.uploadToBackend(account);
         this.showSuccessDialog = true;
         this.$Message.success(blockchainSuccess
-          ? '版权信息已成功上链并保存到数据库！'
-          : '版权信息已保存！');
+          ? '竞品信息已成功上链并保存到数据库！'
+          : '竞品信息已保存！');
       } catch (error) {
         console.error('提交失败:', error);
         this.$Message.error('提交失败：' + (error.message || '未知错误'));
@@ -245,6 +276,15 @@ export default {
         formData.append('description', this.formItem.description);
         formData.append('category', this.formItem.category);
         formData.append('ownerAddress', ownerAddress);
+        formData.append('startPrice', this.formItem.startPrice);
+        formData.append('auctionStartTime', this.formItem.auctionStartTime.toISOString());
+        formData.append('auctionEndTime', this.formItem.auctionEndTime.toISOString());
+        // 添加附件
+        if (this.attachmentFiles.length > 0) {
+          for (let i = 0; i < this.attachmentFiles.length; i++) {
+            formData.append('attachments', this.attachmentFiles[i]);
+          }
+        }
         // 从sessionStorage获取用户信息
         const userStr = sessionStorage.getItem('user');
         if (userStr) {
@@ -252,7 +292,7 @@ export default {
             const user = JSON.parse(userStr);
             if (user.id) {
               formData.append('userId', user.id);
-              console.log('添加用户ID到版权信息:', user.id);
+              console.log('添加用户ID到竞品信息:', user.id);
             }
           } catch (e) {
             console.error('解析用户信息失败:', e);
@@ -283,11 +323,19 @@ export default {
       reader.readAsDataURL(file);
       return false;
     },
+    handleAttachmentBeforeUpload(file) {
+      // 添加到附件列表
+      this.attachmentFiles.push(file);
+      return false;
+    },
     handleFormatError(file) {
-      this.$Message.error('文件格式不正确，仅支持 JPG/PNG 格式');
+      this.$Message.error('照片格式不正确，仅支持 JPG/PNG 格式');
     },
     handleSizeError(file) {
-      this.$Message.error('文件大小超过2MB限制');
+      this.$Message.error('照片大小超过2MB限制');
+    },
+    handleAttachmentSizeError(file) {
+      this.$Message.error('附件大小超过10MB限制');
     },
     handleSuccessOk() {
       this.showSuccessDialog = false;
@@ -296,12 +344,16 @@ export default {
         description: '',
         imageData: null,
         category: '艺术品',
+        startPrice: 0.01,
+        auctionStartTime: new Date(Date.now() + 24 * 60 * 60 * 1000), // 默认开始时间为明天
+        auctionEndTime: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 默认结束时间为一周后
       };
       this.previewImage = '';
       this.fileName = '';
       this.fileObject = null;
+      this.attachmentFiles = [];
       this.transactionHash = '';
-      // 刷新版权列表
+      // 刷新列表
       this.$router.push('/basic-table');
     }
   }

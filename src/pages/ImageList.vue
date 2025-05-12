@@ -14,7 +14,7 @@
   import { contractAddress } from '../contracts/config'
   
   export default {
-    name: '数字藏品交易',
+    name: '竞品拍卖交易',
     components: {
       VmImageList
     },

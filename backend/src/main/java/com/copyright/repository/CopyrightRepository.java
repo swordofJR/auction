@@ -1,16 +1,16 @@
 package com.copyright.repository;
 
-import com.copyright.entity.Copyright;
+import com.copyright.entity.AuctionItems;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
 @Repository
-public interface CopyrightRepository extends JpaRepository<Copyright, Long> {
-    List<Copyright> findByOwnerAddress(String ownerAddress);
+public interface CopyrightRepository extends JpaRepository<AuctionItems, Long> {
+    List<AuctionItems> findByOwnerAddress(String ownerAddress);
 
-    List<Copyright> findByStatus(String status);
+    List<AuctionItems> findByStatus(String status);
 
-    List<Copyright> findByStatusAndOwnerAddress(String status, String ownerAddress);
+    List<AuctionItems> findByStatusAndOwnerAddress(String status, String ownerAddress);
 }

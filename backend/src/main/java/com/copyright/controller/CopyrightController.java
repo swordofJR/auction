@@ -1,6 +1,6 @@
 package com.copyright.controller;
 
-import com.copyright.entity.Copyright;
+import com.copyright.entity.AuctionItems;
 import com.copyright.service.CopyrightService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -22,7 +22,7 @@ public class CopyrightController {
      * 上传版权信息
      */
     @PostMapping("/upload")
-    public ResponseEntity<Copyright> uploadCopyright(
+    public ResponseEntity<AuctionItems> uploadCopyright(
             @RequestParam("file") MultipartFile file,
             @RequestParam("title") String title,
             @RequestParam("description") String description,
@@ -30,7 +30,7 @@ public class CopyrightController {
             @RequestParam("ownerAddress") String ownerAddress,
             @RequestParam(value = "userId", required = false) Long userId) {
         try {
-            Copyright copyright = copyrightService.uploadCopyright(file, title, description, category, ownerAddress,
+            AuctionItems copyright = copyrightService.uploadCopyright(file, title, description, category, ownerAddress,
                     userId);
             return ResponseEntity.ok(copyright);
         } catch (IOException e) {
@@ -42,7 +42,7 @@ public class CopyrightController {
      * 获取所有版权信息
      */
     @GetMapping("/all")
-    public ResponseEntity<List<Copyright>> getAllCopyrights() {
+    public ResponseEntity<List<AuctionItems>> getAllCopyrights() {
         return ResponseEntity.ok(copyrightService.getAllCopyrights());
     }
 
@@ -50,7 +50,7 @@ public class CopyrightController {
      * 获取待审核的版权信息
      */
     @GetMapping("/pending")
-    public ResponseEntity<List<Copyright>> getPendingCopyrights() {
+    public ResponseEntity<List<AuctionItems>> getPendingCopyrights() {
         return ResponseEntity.ok(copyrightService.getPendingCopyrights());
     }
 
@@ -58,7 +58,7 @@ public class CopyrightController {
      * 获取用户的版权信息
      */
     @GetMapping("/user/{address}")
-    public ResponseEntity<List<Copyright>> getUserCopyrights(@PathVariable String address) {
+    public ResponseEntity<List<AuctionItems>> getUserCopyrights(@PathVariable String address) {
         return ResponseEntity.ok(copyrightService.getUserCopyrights(address));
     }
 
@@ -66,7 +66,7 @@ public class CopyrightController {
      * 获取市场上架的版权信息
      */
     @GetMapping("/marketplace")
-    public ResponseEntity<List<Copyright>> getMarketplaceCopyrights() {
+    public ResponseEntity<List<AuctionItems>> getMarketplaceCopyrights() {
         return ResponseEntity.ok(copyrightService.getMarketplaceCopyrights());
     }
 
@@ -74,8 +74,8 @@ public class CopyrightController {
      * 获取版权详情
      */
     @GetMapping("/{id}")
-    public ResponseEntity<Copyright> getCopyright(@PathVariable Long id) {
-        Copyright copyright = copyrightService.getCopyright(id);
+    public ResponseEntity<AuctionItems> getCopyright(@PathVariable Long id) {
+        AuctionItems copyright = copyrightService.getCopyright(id);
         if (copyright != null) {
             return ResponseEntity.ok(copyright);
         }
@@ -86,11 +86,11 @@ public class CopyrightController {
      * 审核版权
      */
     @PostMapping("/{id}/review")
-    public ResponseEntity<Copyright> reviewCopyright(
+    public ResponseEntity<AuctionItems> reviewCopyright(
             @PathVariable Long id,
             @RequestParam String status,
             @RequestParam(required = false) String reason) {
-        Copyright copyright = copyrightService.reviewCopyright(id, status, reason);
+        AuctionItems copyright = copyrightService.reviewCopyright(id, status, reason);
         if (copyright != null) {
             return ResponseEntity.ok(copyright);
         }
@@ -101,10 +101,10 @@ public class CopyrightController {
      * 上架版权
      */
     @PostMapping("/{id}/list")
-    public ResponseEntity<Copyright> listCopyright(
+    public ResponseEntity<AuctionItems> listCopyright(
             @PathVariable Long id,
             @RequestParam BigDecimal price) {
-        Copyright copyright = copyrightService.listCopyright(id, price);
+        AuctionItems copyright = copyrightService.listCopyright(id, price);
         if (copyright != null) {
             return ResponseEntity.ok(copyright);
         }
@@ -115,11 +115,11 @@ public class CopyrightController {
      * 购买版权
      */
     @PostMapping("/{id}/purchase")
-    public ResponseEntity<Copyright> purchaseCopyright(
+    public ResponseEntity<AuctionItems> purchaseCopyright(
             @PathVariable Long id,
             @RequestParam String newOwnerAddress,
             @RequestParam(required = false) Long newUserId) {
-        Copyright copyright = copyrightService.purchaseCopyright(id, newOwnerAddress, newUserId);
+        AuctionItems copyright = copyrightService.purchaseCopyright(id, newOwnerAddress, newUserId);
         if (copyright != null) {
             return ResponseEntity.ok(copyright);
         }

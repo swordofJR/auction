@@ -1,30 +1,44 @@
 <template>
   <div class="basic-table vm-margin">
-    <VmTable title="我的数字藏品版权" :columns="dataColumns" :data="dataTable"></VmTable>
+    <VmTable title="我的竞品拍卖" :columns="dataColumns" :data="dataTable"></VmTable>
     
-    <!-- 发布版权弹窗 -->
-    <Modal v-model="publishModal" title="发布版权到交易市场" width="500">
-      <div v-if="selectedCopyright" class="publish-form">
-        <div class="copyright-info">
-          <h3>{{ selectedCopyright.title }}</h3>
-          <p><strong>描述：</strong> {{ selectedCopyright.description }}</p>
-          <p><strong>类别：</strong> {{ selectedCopyright.category }}</p>
-          <p><strong>创建时间：</strong> {{ formatDateTime(selectedCopyright.createdTime) }}</p>
-          
-          <div class="copyright-image" v-if="selectedCopyright.imgUrl">
-            <img :src="'/api/uploads/' + selectedCopyright.imgUrl" alt="版权图片" style="max-width: 100%; max-height: 200px;">
-          </div>
-          
-          <div class="price-input">
-            <p><strong>请输入发布价格：</strong></p>
-            <InputNumber 
-              v-model="publishPrice" 
-              :min="0.01" 
-              :step="0.1" 
-              style="width: 200px"
-              placeholder="请输入价格">
-            </InputNumber>
-          </div>
+    <!-- 发布竞品拍卖弹窗 -->
+    <Modal v-model="publishModal" title="发布竞品到拍卖市场" width="600">
+      <div v-if="selectedItem" class="item-info">
+        <div class="item-header">
+          <h3>{{ selectedItem.title }}</h3>
+          <p><strong>描述：</strong> {{ selectedItem.description }}</p>
+          <p><strong>类别：</strong> {{ selectedItem.category }}</p>
+          <p><strong>起拍价：</strong> {{ selectedItem.startPrice }} ETH</p>
+          <p><strong>拍卖开始时间：</strong> {{ formatDateTime(selectedItem.auctionStartTime) }}</p>
+          <p><strong>拍卖结束时间：</strong> {{ formatDateTime(selectedItem.auctionEndTime) }}</p>
+          <p><strong>创建时间：</strong> {{ formatDateTime(selectedItem.createdTime) }}</p>
+        </div>
+        
+        <div class="item-image" v-if="selectedItem.imgUrl">
+          <img :src="require('../assets/img/bg.jpg')" alt="竞品图片" style="max-width: 100%; max-height: 200px;">
+        </div>
+        
+        <div class="attachments" v-if="selectedItem.attachmentPaths">
+          <p><strong>附件文件：</strong></p>
+          <ul class="attachment-list">
+            <li v-for="(attachment, index) in getAttachments(selectedItem.attachmentPaths)" :key="index">
+              <a @click="downloadAttachment(attachment)" class="attachment-link">
+                <i class="fa fa-file"></i> {{ getAttachmentName(attachment) }}
+              </a>
+            </li>
+          </ul>
+        </div>
+        
+        <div class="price-input">
+          <p><strong>请输入起拍价(ETH)：</strong></p>
+          <InputNumber 
+            v-model="publishPrice" 
+            :min="selectedItem.startPrice || 0.01" 
+            :step="0.1" 
+            style="width: 200px"
+            placeholder="请输入起拍价格">
+          </InputNumber>
         </div>
       </div>
       <div slot="footer">
@@ -34,7 +48,7 @@
           @click="confirmPublish" 
           :disabled="!publishPrice || publishing"
           :loading="publishing">
-          {{ publishing ? '交易处理中...' : '确认发布' }}
+          {{ publishing ? '处理中...' : '确认发布' }}
         </Button>
       </div>
     </Modal>
@@ -72,7 +86,30 @@
             id: '2.140712',
             title: '状态',
             key: 'status',
-            sortable: true
+            sortable: true,
+            render: (h, params) => {
+              const statusMap = {
+                'PENDING': '待审核',
+                'APPROVED': '已审核',
+                'REJECTED': '已拒绝',
+                'LISTED': '拍卖中',
+                'SOLD': '已售出',
+                'DELISTED': '已下架'
+              };
+              const colorMap = {
+                'PENDING': '#ff9900',
+                'APPROVED': '#19be6b',
+                'REJECTED': '#ed4014',
+                'LISTED': '#2d8cf0',
+                'SOLD': '#9c27b0',
+                'DELISTED': '#808695'
+              };
+              return h('Tag', {
+                props: {
+                  color: colorMap[params.row.status] || 'default'
+                }
+              }, statusMap[params.row.status] || params.row.status);
+            }
           },
           {
             id: '2.140713',
@@ -82,21 +119,33 @@
           },
           {
             id: '2.140714',
-            title: '所有者',
-            key: 'username',
-            sortable: true
+            title: '起拍价',
+            key: 'startPrice',
+            sortable: true,
+            render: (h, params) => {
+              return h('div', (params.row.startPrice || '0') + ' ETH');
+            }
           },
           {
             id: '2.140715',
-            title: '创建时间',
-            key: 'createdTime',
+            title: '拍卖开始时间',
+            key: 'auctionStartTime',
             sortable: true,
             render: (h, params) => {
-              return h('div', this.formatDateTime(params.row.createdTime))
+              return h('div', this.formatDateTime(params.row.auctionStartTime))
             }
           },
           {
             id: '2.140716',
+            title: '拍卖结束时间',
+            key: 'auctionEndTime',
+            sortable: true,
+            render: (h, params) => {
+              return h('div', this.formatDateTime(params.row.auctionEndTime))
+            }
+          },
+          {
+            id: '2.140717',
             title: '操作',
             key: 'action',
             width: 150,
@@ -108,20 +157,20 @@
                     type: 'primary',
                     size: 'small',
                     disabled: params.row.status !== 'APPROVED'
-          },
+                  },
                   on: {
                     click: () => {
                       this.openPublishModal(params.row)
                     }
                   }
-                }, '发布')
+                }, '发布拍卖')
               ])
             }
           }
         ],
         dataTable: [],
         publishModal: false,
-        selectedCopyright: null,
+        selectedItem: null,
         publishPrice: null,
         publishing: false,
         web3: null,
@@ -143,14 +192,14 @@
       }
     },
     mounted() {
-      this.loadUserCopyrights()
+      this.loadUserItems()
       // 设置定时刷新，每30秒更新一次数据
       this.refreshInterval = setInterval(() => {
         this.refreshData()
       }, 30000)
     },
     activated() {
-      this.loadUserCopyrights()
+      this.loadUserItems()
     },
     beforeDestroy() {
       // 组件销毁前清除定时器
@@ -174,24 +223,24 @@
           console.warn('MetaMask not detected')
         }
       },
-      loadUserCopyrights() {
+      loadUserItems() {
         if (!this.currentUser) {
           this.$Message.error('请先登录')
           return
         }
-        // 使用用户ID查询其版权（优先），包含用户名信息
+        // 使用用户ID查询其竞品（优先），包含用户名信息
         if (this.currentUser.id) {
           axios.get(`/api/jdbc/copyright/user-id/${this.currentUser.id}/with-username`)
             .then(response => {
               if (response.data && response.data.length > 0) {
                 this.dataTable = response.data
               } else {
-                // 如果通过用户ID没有找到版权，尝试使用钱包地址
+                // 如果通过用户ID没有找到竞品，尝试使用钱包地址
                 this.tryFetchByAddress()
               }
             })
             .catch(error => {
-              console.error('通过用户ID加载版权失败:', error)
+              console.error('通过用户ID加载竞品失败:', error)
               // 发生错误时尝试使用钱包地址
               this.tryFetchByAddress()
             })
@@ -207,8 +256,8 @@
               this.dataTable = response.data
             })
             .catch(error => {
-              console.error('通过钱包地址加载版权失败:', error)
-              this.$Message.error('加载版权信息失败')
+              console.error('通过钱包地址加载竞品失败:', error)
+              this.$Message.error('加载竞品信息失败')
             })
         }
       },
@@ -217,14 +266,31 @@
         const date = new Date(dateTimeStr);
         return date.toLocaleString();
       },
-      openPublishModal(copyright) {
-        if (copyright.status !== 'APPROVED') {
-          this.$Message.warning('只有审核通过的版权才能发布到交易市场');
+      openPublishModal(item) {
+        if (item.status !== 'APPROVED') {
+          this.$Message.warning('只有审核通过的竞品才能发布到拍卖市场');
           return;
         }
-        this.selectedCopyright = copyright;
-        this.publishPrice = null;
+        this.selectedItem = item;
+        this.publishPrice = item.startPrice || 0.01;
         this.publishModal = true;
+      },
+      getAttachments(attachmentPaths) {
+        if (!attachmentPaths) return [];
+        return attachmentPaths.split(',').filter(path => path.trim() !== '');
+      },
+      getAttachmentName(path) {
+        const parts = path.split('/');
+        return parts[parts.length - 1];
+      },
+      downloadAttachment(fileName) {
+        const downloadUrl = `/api/jdbc/copyright/download/attachment/${fileName}`;
+        const a = document.createElement('a');
+        a.href = downloadUrl;
+        a.download = this.getAttachmentName(fileName);
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
       },
       async confirmPublish() {
         if (!this.publishPrice || this.publishPrice <= 0) {
@@ -240,11 +306,14 @@
           const account = accounts[0]
           // 准备上架元数据
           const metadata = {
-            id: this.selectedCopyright.id,
-            title: this.selectedCopyright.title,
-            description: this.selectedCopyright.description,
+            id: this.selectedItem.id,
+            title: this.selectedItem.title,
+            description: this.selectedItem.description,
             price: this.publishPrice,
             owner: account,
+            startPrice: this.selectedItem.startPrice,
+            auctionStartTime: this.selectedItem.auctionStartTime,
+            auctionEndTime: this.selectedItem.auctionEndTime,
             status: 'LISTED'
           }
           try {
@@ -275,20 +344,20 @@
             console.error('区块链交易失败:', blockchainError)
           }
           // 3. 无论区块链是否成功，都更新数据库
-          axios.post(`/api/jdbc/copyright/${this.selectedCopyright.id}/list`, null, {
+          axios.post(`/api/jdbc/copyright/${this.selectedItem.id}/list`, null, {
             params: {
               price: this.publishPrice
             }
           })
           .then(response => {
             this.$Message.success(blockchainSuccess
-              ? '版权已成功上架交易市场并写入区块链！'
-              : '版权已成功上架交易市场！')
+              ? '竞品已成功上架拍卖市场并写入区块链！'
+              : '竞品已成功上架拍卖市场！')
             this.publishModal = false
-            this.loadUserCopyrights()
+            this.loadUserItems()
           })
           .catch(error => {
-            this.$Message.error('版权上架失败')
+            this.$Message.error('竞品上架失败')
             console.error('API调用失败:', error)
           })
         } catch (error) {
@@ -299,8 +368,8 @@
         }
       },
       refreshData() {
-        console.log('刷新用户版权信息数据...')
-        this.loadUserCopyrights()
+        console.log('刷新用户竞品信息数据...')
+        this.loadUserItems()
       }
     }
   }
@@ -311,22 +380,45 @@
     width: 100%;
   }
   
-  .copyright-info {
+  .item-info {
     margin-bottom: 20px;
   }
   
-  .copyright-info h3 {
+  .item-header h3 {
     margin-bottom: 15px;
     color: #17233d;
   }
   
-  .copyright-info p {
+  .item-header p {
     margin-bottom: 10px;
   }
   
-  .copyright-image {
+  .item-image {
     margin: 15px 0;
     text-align: center;
+  }
+  
+  .attachments {
+    margin: 15px 0;
+    border-top: 1px solid #e8eaec;
+    padding-top: 15px;
+  }
+  
+  .attachment-list {
+    list-style: none;
+    padding: 0;
+    margin: 10px 0;
+  }
+  
+  .attachment-link {
+    color: #2d8cf0;
+    cursor: pointer;
+    display: inline-block;
+    margin-bottom: 5px;
+  }
+  
+  .attachment-link:hover {
+    text-decoration: underline;
   }
   
   .price-input {

@@ -40,7 +40,7 @@
           <Menu-item name="Panels" v-if="isUser && !isAdmin">
               <router-link to="/panels">
                 <i class="fa fa-database"></i>
-                上传版权信息
+                上传竞品信息
               </router-link>
           </Menu-item>
           <!-- <Menu-item name="Editor">
@@ -49,6 +49,18 @@
                 Editor
               </router-link>
           </Menu-item> -->
+          <Menu-item name="Marketplace" v-if="canAccessMarket">
+              <router-link to="/marketplace">
+                <i class="fa fa-gavel"></i>
+                拍卖市场  
+              </router-link>
+          </Menu-item>
+          <Menu-item name="AuctionMarketplace" v-if="canAccessMarket">
+              <router-link to="/auction-marketplace">
+                <i class="fa fa-gavel"></i>
+                竞品拍卖市场  
+              </router-link>
+          </Menu-item>
           <Menu-item name="ImageList" v-if="canAccessMarket">
               <router-link to="/imagelist">
                 <i class="fa fa-shopping-bag"></i>
@@ -64,19 +76,19 @@
           <Menu-item name="BasicTable" v-if="isUser && !isAdmin">
               <router-link to="/basic-table">
                 <i class="fa fa-id-card"></i>
-                我的数字藏品  
+                我的竞品  
               </router-link>
           </Menu-item>
           <Menu-item name="EditableTable" v-if="isAdmin">
               <router-link to="/editable-table">
                 <i class="fa fa-id-card"></i>
-                版权审核信息  
+                竞品审核信息  
               </router-link>
           </Menu-item>
           <Menu-item name="AllCopyrights" v-if="isAdmin">
               <router-link to="/all-copyrights">
                 <i class="fa fa-list"></i>
-                查看版权信息  
+                查看竞品信息  
               </router-link>
           </Menu-item>
           <Menu-item name="UserManagement" v-if="isAdmin">

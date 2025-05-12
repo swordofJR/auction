@@ -22,9 +22,6 @@ public class UserFileInfo {
     private String fileName;
 
     @Column(nullable = false)
-    private int fileCID;
-
-    @Column(nullable = false)
     private int fileSize;
 
     @Column(nullable = false)

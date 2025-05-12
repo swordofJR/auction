@@ -1,14 +1,21 @@
 package com.copyright.controller;
 
-import com.copyright.entity.Copyright;
+import com.copyright.entity.AuctionItems;
 import com.copyright.service.CopyrightJdbcService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -20,21 +27,51 @@ public class CopyrightJdbcController {
     private CopyrightJdbcService copyrightJdbcService;
 
     /**
-     * 上传版权信息
+     * 上传竞品信息
      */
     @PostMapping("/upload")
-    public ResponseEntity<Copyright> uploadCopyright(
+    public ResponseEntity<AuctionItems> uploadCopyright(
             @RequestParam("file") MultipartFile file,
             @RequestParam("title") String title,
             @RequestParam("description") String description,
             @RequestParam("category") String category,
             @RequestParam("ownerAddress") String ownerAddress,
+            @RequestParam(value = "startPrice", required = false, defaultValue = "0.01") BigDecimal startPrice,
+            @RequestParam(value = "auctionStartTime", required = false) String auctionStartTimeStr,
+            @RequestParam(value = "auctionEndTime", required = false) String auctionEndTimeStr,
+            @RequestParam(value = "attachments", required = false) MultipartFile[] attachments,
             @RequestParam(value = "userId", required = false) Long userId) {
         try {
-            Copyright copyright = copyrightJdbcService.uploadCopyright(file, title, description, category, ownerAddress,
+            LocalDateTime auctionStartTime = null;
+            LocalDateTime auctionEndTime = null;
+
+            if (auctionStartTimeStr != null && !auctionStartTimeStr.isEmpty()) {
+                auctionStartTime = LocalDateTime.parse(auctionStartTimeStr.replace("Z", ""));
+            } else {
+                auctionStartTime = LocalDateTime.now().plusDays(1); // 默认为明天
+            }
+
+            if (auctionEndTimeStr != null && !auctionEndTimeStr.isEmpty()) {
+                auctionEndTime = LocalDateTime.parse(auctionEndTimeStr.replace("Z", ""));
+            } else {
+                auctionEndTime = LocalDateTime.now().plusDays(7); // 默认为一周后
+            }
+
+            AuctionItems auctionItem = copyrightJdbcService.uploadCopyright(
+                    file,
+                    title,
+                    description,
+                    category,
+                    ownerAddress,
+                    startPrice,
+                    auctionStartTime,
+                    auctionEndTime,
+                    attachments,
                     userId);
-            return ResponseEntity.ok(copyright);
+
+            return ResponseEntity.ok(auctionItem);
         } catch (IOException e) {
+            e.printStackTrace();
             return ResponseEntity.badRequest().build();
         }
     }
@@ -43,7 +80,7 @@ public class CopyrightJdbcController {
      * 获取所有版权信息
      */
     @GetMapping("/all")
-    public ResponseEntity<List<Copyright>> getAllCopyrights() {
+    public ResponseEntity<List<AuctionItems>> getAllCopyrights() {
         return ResponseEntity.ok(copyrightJdbcService.getAllCopyrights());
     }
 
@@ -59,7 +96,7 @@ public class CopyrightJdbcController {
      * 获取待审核的版权信息
      */
     @GetMapping("/pending")
-    public ResponseEntity<List<Copyright>> getPendingCopyrights() {
+    public ResponseEntity<List<AuctionItems>> getPendingCopyrights() {
         return ResponseEntity.ok(copyrightJdbcService.getPendingCopyrights());
     }
 
@@ -67,7 +104,7 @@ public class CopyrightJdbcController {
      * 获取用户的版权信息
      */
     @GetMapping("/user/{address}")
-    public ResponseEntity<List<Copyright>> getUserCopyrights(@PathVariable String address) {
+    public ResponseEntity<List<AuctionItems>> getUserCopyrights(@PathVariable String address) {
         return ResponseEntity.ok(copyrightJdbcService.getUserCopyrights(address));
     }
 
@@ -83,7 +120,7 @@ public class CopyrightJdbcController {
      * 获取用户的版权信息 (通过用户ID)
      */
     @GetMapping("/user-id/{userId}")
-    public ResponseEntity<List<Copyright>> getUserCopyrightsByUserId(@PathVariable Long userId) {
+    public ResponseEntity<List<AuctionItems>> getUserCopyrightsByUserId(@PathVariable Long userId) {
         return ResponseEntity.ok(copyrightJdbcService.getUserCopyrightsByUserId(userId));
     }
 
@@ -99,7 +136,7 @@ public class CopyrightJdbcController {
      * 获取市场上架的版权信息
      */
     @GetMapping("/marketplace")
-    public ResponseEntity<List<Copyright>> getMarketplaceCopyrights() {
+    public ResponseEntity<List<AuctionItems>> getMarketplaceCopyrights() {
         return ResponseEntity.ok(copyrightJdbcService.getMarketplaceCopyrights());
     }
 
@@ -115,11 +152,11 @@ public class CopyrightJdbcController {
      * 审核版权
      */
     @PostMapping("/{id}/review")
-    public ResponseEntity<Copyright> reviewCopyright(
+    public ResponseEntity<AuctionItems> reviewCopyright(
             @PathVariable Long id,
             @RequestParam String status,
             @RequestParam(required = false) String reason) {
-        Copyright copyright = copyrightJdbcService.reviewCopyright(id, status, reason);
+        AuctionItems copyright = copyrightJdbcService.reviewCopyright(id, status, reason);
         if (copyright != null) {
             return ResponseEntity.ok(copyright);
         }
@@ -130,10 +167,10 @@ public class CopyrightJdbcController {
      * 上架版权
      */
     @PostMapping("/{id}/list")
-    public ResponseEntity<Copyright> listCopyright(
+    public ResponseEntity<AuctionItems> listCopyright(
             @PathVariable Long id,
             @RequestParam BigDecimal price) {
-        Copyright copyright = copyrightJdbcService.listCopyright(id, price);
+        AuctionItems copyright = copyrightJdbcService.listCopyright(id, price);
         if (copyright != null) {
             return ResponseEntity.ok(copyright);
         }
@@ -144,11 +181,11 @@ public class CopyrightJdbcController {
      * 购买版权
      */
     @PostMapping("/{id}/purchase")
-    public ResponseEntity<Copyright> purchaseCopyright(
+    public ResponseEntity<AuctionItems> purchaseCopyright(
             @PathVariable Long id,
             @RequestParam String newOwnerAddress,
             @RequestParam(required = false) Long newUserId) {
-        Copyright copyright = copyrightJdbcService.purchaseCopyright(id, newOwnerAddress, newUserId);
+        AuctionItems copyright = copyrightJdbcService.purchaseCopyright(id, newOwnerAddress, newUserId);
         if (copyright != null) {
             return ResponseEntity.ok(copyright);
         }
@@ -160,8 +197,8 @@ public class CopyrightJdbcController {
      * 注意：这个端点必须放在最后，避免与其他路径冲突
      */
     @GetMapping("/{id}")
-    public ResponseEntity<Copyright> getCopyright(@PathVariable Long id) {
-        Copyright copyright = copyrightJdbcService.getCopyright(id);
+    public ResponseEntity<AuctionItems> getCopyright(@PathVariable Long id) {
+        AuctionItems copyright = copyrightJdbcService.getCopyright(id);
         if (copyright != null) {
             return ResponseEntity.ok(copyright);
         }
@@ -172,12 +209,47 @@ public class CopyrightJdbcController {
      * 下架版权
      */
     @PostMapping("/{id}/delist")
-    public ResponseEntity<Copyright> delistCopyright(
+    public ResponseEntity<AuctionItems> delistCopyright(
             @PathVariable Long id) {
-        Copyright copyright = copyrightJdbcService.delistCopyright(id);
+        AuctionItems copyright = copyrightJdbcService.delistCopyright(id);
         if (copyright != null) {
             return ResponseEntity.ok(copyright);
         }
         return ResponseEntity.badRequest().build();
+    }
+
+    /**
+     * 下载附件
+     */
+    @GetMapping("/download/attachment/{fileName}")
+    public ResponseEntity<byte[]> downloadAttachment(@PathVariable String fileName) {
+        try {
+            // 获取文件路径
+            String uploadDir = System.getProperty("user.dir") + "/uploads";
+            Path filePath = Paths.get(uploadDir, fileName);
+
+            // 检查文件是否存在
+            if (!Files.exists(filePath)) {
+                return ResponseEntity.notFound().build();
+            }
+
+            // 读取文件内容
+            byte[] fileContent = Files.readAllBytes(filePath);
+
+            // 获取文件MIME类型
+            String mimeType = Files.probeContentType(filePath);
+            if (mimeType == null) {
+                mimeType = "application/octet-stream";
+            }
+
+            // 构建响应
+            return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType(mimeType))
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
+                    .body(fileContent);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 }

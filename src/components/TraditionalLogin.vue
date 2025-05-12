@@ -49,7 +49,11 @@ export default {
       axios.post('/api/user/login', params)
         .then(response => {
           const user = response.data
-          user.role = this.username === 'root' ? 'admin' : 'user'
+          if (this.username === 'root') {
+            user.role = 'admin'
+          } else {
+            user.role = user.role || 'user'
+          }
           sessionStorage.setItem('user', JSON.stringify(user))
           if (user.role === 'admin') {
             this.$router.push('/editable-table')

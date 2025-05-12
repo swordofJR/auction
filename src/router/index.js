@@ -15,6 +15,7 @@ import LockScreen from '@/pages/LockScreen'
 import Loading from '@/pages/Loading'
 import AllCopyrights from '@/pages/AllCopyrights'
 import UserManagement from '@/pages/UserManagement'
+import Marketplace from '@/pages/Marketplace'
 
 Vue.use(Router)
 
@@ -104,6 +105,16 @@ const router = new Router({
                         title: '用户管理',
                         requiresAuth: true,
                         role: 'admin'
+                    }
+                },
+                {
+                    path: 'marketplace',
+                    name: 'Marketplace',
+                    component: Marketplace,
+                    meta: {
+                        keepAlive: true,
+                        title: '拍卖市场',
+                        requiresAuth: true
                     }
                 },
                 {

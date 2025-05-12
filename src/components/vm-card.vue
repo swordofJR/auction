@@ -64,6 +64,17 @@
         </div>
       </div>
     </Modal>
+
+    <div v-if="attachmentPaths" class="card-attachments">
+      <p class="attachment-title">附件文件:</p>
+      <ul class="attachment-list">
+        <li v-for="(attachment, index) in attachmentsArray" :key="index">
+          <a @click="downloadAttachment(attachment)" class="attachment-link">
+            <Icon type="ios-paper" /> {{ getAttachmentName(attachment) }}
+          </a>
+        </li>
+      </ul>
+    </div>
   </div>
 </template>
 <script>
@@ -121,15 +132,21 @@
       isAdmin: {
         type: Boolean,
         default: false
+      },
+      attachmentPaths: {
+        type: String,
+        default: ''
       }
-    //   username: {
-    //     type: String,
-    //     default: '未知用户'
-    //   }
     },
     data: function () {
       return {
         showBuyModal: false
+      }
+    },
+    computed: {
+      attachmentsArray() {
+        if (!this.attachmentPaths) return [];
+        return this.attachmentPaths.split(',').filter(path => path.trim() !== '');
       }
     },
     methods: {
@@ -156,6 +173,19 @@
           id: this.id,
           title: this.title
         });
+      },
+      getAttachmentName(path) {
+        const parts = path.split('/');
+        return parts[parts.length - 1];
+      },
+      downloadAttachment(fileName) {
+        const downloadUrl = `/api/jdbc/copyright/download/attachment/${fileName}`;
+        const a = document.createElement('a');
+        a.href = downloadUrl;
+        a.download = this.getAttachmentName(fileName);
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
       }
     }
   }
@@ -215,5 +245,35 @@
 .card-actions {
   margin-top: 12px;
   text-align: right;
+}
+
+.card-attachments {
+  margin-top: 10px;
+  border-top: 1px solid #eee;
+  padding-top: 10px;
+}
+
+.attachment-title {
+  font-weight: bold;
+  font-size: 14px;
+  margin-bottom: 5px;
+  color: #666;
+}
+
+.attachment-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.attachment-link {
+  color: #2d8cf0;
+  cursor: pointer;
+  display: inline-block;
+  margin-bottom: 5px;
+}
+
+.attachment-link:hover {
+  text-decoration: underline;
 }
 </style>

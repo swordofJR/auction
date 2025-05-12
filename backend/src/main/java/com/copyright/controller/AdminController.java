@@ -1,6 +1,6 @@
 package com.copyright.controller;
 
-import com.copyright.entity.Copyright;
+import com.copyright.entity.AuctionItems;
 import com.copyright.entity.User;
 import com.copyright.service.CopyrightService;
 import com.copyright.service.UserService;
@@ -26,7 +26,7 @@ public class AdminController {
      * 获取所有待审核版权
      */
     @GetMapping("/copyrights/pending")
-    public ResponseEntity<List<Copyright>> getPendingCopyrights() {
+    public ResponseEntity<List<AuctionItems>> getPendingCopyrights() {
         return ResponseEntity.ok(copyrightService.getPendingCopyrights());
     }
 
@@ -34,7 +34,7 @@ public class AdminController {
      * 审核版权
      */
     @PostMapping("/copyrights/{id}/review")
-    public ResponseEntity<Copyright> reviewCopyright(
+    public ResponseEntity<AuctionItems> reviewCopyright(
             @PathVariable Long id,
             @RequestParam String status,
             @RequestParam(required = false) String reason) {
@@ -44,7 +44,7 @@ public class AdminController {
             return ResponseEntity.badRequest().build();
         }
 
-        Copyright copyright = copyrightService.reviewCopyright(id, status, reason);
+        AuctionItems copyright = copyrightService.reviewCopyright(id, status, reason);
         if (copyright != null) {
             return ResponseEntity.ok(copyright);
         }
@@ -55,7 +55,7 @@ public class AdminController {
      * 获取所有版权
      */
     @GetMapping("/copyrights")
-    public ResponseEntity<List<Copyright>> getAllCopyrights() {
+    public ResponseEntity<List<AuctionItems>> getAllCopyrights() {
         return ResponseEntity.ok(copyrightService.getAllCopyrights());
     }
 

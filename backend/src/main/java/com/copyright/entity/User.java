@@ -22,7 +22,7 @@ public class User {
     private String address;
 
     @Column(nullable = false)
-    private String hash;
+    private String email;
 
     @Column(nullable = false)
     private int deleted;

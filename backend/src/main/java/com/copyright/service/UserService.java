@@ -34,7 +34,7 @@ public class UserService {
         // 设置默认钱包地址
         newUser.setAddress("0x0000000000000000000000000000000000000000");
         // 设置默认哈希值
-        newUser.setHash(username + "hash");
+        // newUser.setHash(username + "hash");
         // 设置删除标记为0（未删除）
         newUser.setDeleted(0);
         // 设置创建时间和更新时间

@@ -1,6 +1,6 @@
 package com.copyright.service;
 
-import com.copyright.entity.Copyright;
+import com.copyright.entity.AuctionItems;
 import com.copyright.repository.CopyrightRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -32,13 +32,13 @@ public class CopyrightService {
         }
     }
 
-    public Copyright uploadCopyright(MultipartFile file, String title, String description, String category,
+    public AuctionItems uploadCopyright(MultipartFile file, String title, String description, String category,
             String ownerAddress, Long userId) throws IOException {
         // 保存文件
         String uniqueFileName = saveFile(file);
 
         // 创建版权对象
-        Copyright copyright = new Copyright();
+        AuctionItems copyright = new AuctionItems();
         copyright.setTitle(title);
         copyright.setDescription(description);
         copyright.setImgUrl(uniqueFileName);
@@ -64,28 +64,28 @@ public class CopyrightService {
         return uniqueFileName;
     }
 
-    public List<Copyright> getAllCopyrights() {
+    public List<AuctionItems> getAllCopyrights() {
         return copyrightRepository.findAll();
     }
 
-    public List<Copyright> getPendingCopyrights() {
+    public List<AuctionItems> getPendingCopyrights() {
         return copyrightRepository.findByStatus("PENDING");
     }
 
-    public List<Copyright> getUserCopyrights(String ownerAddress) {
+    public List<AuctionItems> getUserCopyrights(String ownerAddress) {
         return copyrightRepository.findByOwnerAddress(ownerAddress);
     }
 
-    public List<Copyright> getMarketplaceCopyrights() {
+    public List<AuctionItems> getMarketplaceCopyrights() {
         return copyrightRepository.findByStatus("LISTED");
     }
 
-    public Copyright getCopyright(Long id) {
+    public AuctionItems getCopyright(Long id) {
         return copyrightRepository.findById(id).orElse(null);
     }
 
-    public Copyright reviewCopyright(Long id, String status, String reason) {
-        Copyright copyright = getCopyright(id);
+    public AuctionItems reviewCopyright(Long id, String status, String reason) {
+        AuctionItems copyright = getCopyright(id);
         if (copyright != null) {
             copyright.setStatus(status);
             copyright.setReason(reason);
@@ -94,18 +94,18 @@ public class CopyrightService {
         return null;
     }
 
-    public Copyright listCopyright(Long id, BigDecimal price) {
-        Copyright copyright = getCopyright(id);
+    public AuctionItems listCopyright(Long id, BigDecimal price) {
+        AuctionItems copyright = getCopyright(id);
         if (copyright != null && "APPROVED".equals(copyright.getStatus())) {
             copyright.setStatus("LISTED");
-            copyright.setPrice(price);
+            copyright.setCurrentPrice(price);
             return copyrightRepository.save(copyright);
         }
         return null;
     }
 
-    public Copyright purchaseCopyright(Long id, String newOwnerAddress, Long newUserId) {
-        Copyright copyright = getCopyright(id);
+    public AuctionItems purchaseCopyright(Long id, String newOwnerAddress, Long newUserId) {
+        AuctionItems copyright = getCopyright(id);
         if (copyright != null && "LISTED".equals(copyright.getStatus())) {
             copyright.setStatus("SOLD");
             copyright.setOwnerAddress(newOwnerAddress);

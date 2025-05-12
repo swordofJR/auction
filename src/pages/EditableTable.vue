@@ -1,6 +1,6 @@
 <template>
   <div>
-    <VmTable title="审核版权申请" 
+    <VmTable title="审核竞品申请" 
              type="review" 
            :columns="dataColumns" 
            :data="dataTable"
@@ -10,11 +10,11 @@
            class="vm-margin">
   </VmTable>
     
-    <!-- 版权详情弹窗 -->
-    <Modal v-model="detailsModal" title="版权详情" width="600">
+    <!-- 竞品详情弹窗 -->
+    <Modal v-model="detailsModal" title="竞品详情" width="600">
       <div v-if="selectedCopyright">
         <div class="copyright-image" v-if="selectedCopyright.imgUrl">
-          <img :src="'/api/uploads/' + selectedCopyright.imgUrl" style="max-width: 100%; max-height: 300px;" />
+          <img :src="require('../assets/img/bg.jpg')" style="max-width: 100%; max-height: 300px;" />
         </div>
         <div class="copyright-info">
           <p><strong>标题：</strong> {{ selectedCopyright.title }}</p>
@@ -23,6 +23,9 @@
           <p><strong>状态：</strong> {{ selectedCopyright.status }}</p>
           <p><strong>拥有者地址：</strong> {{ selectedCopyright.ownerAddress }}</p>
           <p><strong>拥有者ID：</strong> {{ selectedCopyright.userId }}</p>
+          <p><strong>起拍价：</strong> {{ selectedCopyright.startPrice }} ETH</p>
+          <p><strong>拍卖开始时间：</strong> {{ formatDateTime(selectedCopyright.auctionStartTime) }}</p>
+          <p><strong>拍卖结束时间：</strong> {{ formatDateTime(selectedCopyright.auctionEndTime) }}</p>
         </div>
       </div>
       <div slot="footer">
@@ -57,7 +60,7 @@
             this.dataTable = response.data
           })
           .catch(error => {
-            console.error('Failed to load pending copyrights:', error)
+            console.error('Failed to load pending items:', error)
           })
       },
       showDetails(copyright) {
@@ -71,7 +74,7 @@
           }
         })
         .then(response => {
-          this.$Message.success('版权已通过审核')
+          this.$Message.success('竞品已通过审核')
           this.loadPendingCopyrights()
         })
         .catch(error => {
@@ -95,7 +98,7 @@
           }
         })
         .then(response => {
-          this.$Message.success('版权已驳回')
+          this.$Message.success('竞品已驳回')
           this.rejectModal = false
           this.rejectReason = ''
           this.copyrightToReject = null
@@ -105,6 +108,11 @@
           this.$Message.error('驳回操作失败')
           console.error('Rejection failed:', error)
         })
+      },
+      formatDateTime(dateTimeStr) {
+        if (!dateTimeStr) return '';
+        const date = new Date(dateTimeStr);
+        return date.toLocaleString();
       }
     },
     data () {

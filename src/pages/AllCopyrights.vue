@@ -11,8 +11,7 @@
     <Modal v-model="detailsModal" title="版权详情" width="600">
       <div v-if="selectedCopyright">
         <div class="copyright-image">
-          <img v-if="selectedCopyright.imgUrl" :src="'/api/uploads/' + selectedCopyright.imgUrl" style="max-width: 100%; max-height: 300px;" />
-          <img v-else :src="require('../assets/img/bg.jpg')" style="max-width: 100%; max-height: 300px;" />
+          <img :src="require('../assets/img/bg.jpg')" style="max-width: 100%; max-height: 300px;" />
         </div>
         <div class="copyright-info">
           <p><strong>标题：</strong> {{ selectedCopyright.title }}</p>

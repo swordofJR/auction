@@ -33,6 +33,7 @@
           :username="item.username"
           :id="item.id"
           :isAdmin="isAdmin"
+          :attachmentPaths="item.attachmentPaths"
           @edit="handleEdit(item)"
           @delist="handleDelist(item)">
         </VmCard>
