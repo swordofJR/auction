@@ -284,6 +284,32 @@ public class CopyrightJdbcController {
     }
 
     /**
+     * 获取交易历史
+     */
+    @GetMapping("/{id}/transaction-history")
+    public ResponseEntity<?> getTransactionHistory(@PathVariable Long id) {
+        try {
+            List<Map<String, Object>> transactionHistory = copyrightJdbcService.getTransactionHistory(id);
+            return ResponseEntity.ok(transactionHistory);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    /**
+     * 获取用户交易历史
+     */
+    @GetMapping("/user/{userId}/transaction-history")
+    public ResponseEntity<?> getUserTransactionHistory(@PathVariable Long userId) {
+        try {
+            List<Map<String, Object>> transactionHistory = copyrightJdbcService.getUserTransactionHistory(userId);
+            return ResponseEntity.ok(transactionHistory);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    /**
      * 获取版权详情
      * 注意：这个端点必须放在最后，避免与其他路径冲突
      */

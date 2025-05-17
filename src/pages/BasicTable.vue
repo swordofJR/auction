@@ -65,6 +65,21 @@
         </Button>
       </div>
     </Modal>
+    <!-- 出价历史弹窗 -->
+    <Modal v-model="showBidHistory" title="竞品出价历史" width="700">
+      <div class="bid-history">
+        <Table :columns="bidHistoryColumns" :data="bidHistoryData" :loading="loadingBidHistory">
+          <template slot="empty">
+            <div class="no-bids">
+              <p>暂无出价记录</p>
+            </div>
+          </template>
+        </Table>
+      </div>
+      <div slot="footer">
+        <Button @click="showBidHistory = false">关闭</Button>
+      </div>
+    </Modal>
   </div>
 </template>
 <script>
@@ -130,11 +145,11 @@
           },
           {
             id: '2.140714',
-            title: '起拍价',
-            key: 'startPrice',
+            title: '当前价格',
+            key: 'currentPrice',
             sortable: true,
             render: (h, params) => {
-              return h('div', (params.row.startPrice || '0') + ' ETH');
+              return h('div', (params.row.currentPrice || params.row.startPrice || '0') + ' ETH');
             }
           },
           {
@@ -159,7 +174,7 @@
             id: '2.140717',
             title: '操作',
             key: 'action',
-            width: 150,
+            width: 200,
             align: 'center',
             render: (h, params) => {
               return h('div', [
@@ -169,12 +184,26 @@
                     size: 'small',
                     disabled: params.row.status !== 'APPROVED'
                   },
+                  style: {
+                    marginRight: '5px'
+                  },
                   on: {
                     click: () => {
                       this.openPublishModal(params.row)
                     }
                   }
-                }, '发布拍卖')
+                }, '发布拍卖'),
+                h('Button', {
+                  props: {
+                    type: 'info',
+                    size: 'small'
+                  },
+                  on: {
+                    click: () => {
+                      this.openBidHistoryModal(params.row)
+                    }
+                  }
+                }, '出价历史')
               ])
             }
           }
@@ -191,7 +220,28 @@
         // 钱包相关状态
         walletConnected: false,
         walletAddress: '',
-        connectingWallet: false
+        connectingWallet: false,
+        // 出价历史相关
+        showBidHistory: false,
+        bidHistoryData: [],
+        loadingBidHistory: false,
+        bidHistoryColumns: [
+          {
+            title: '出价人',
+            key: 'bidderName',
+            width: '30%'
+          },
+          {
+            title: '出价金额',
+            key: 'bidAmount',
+            width: '30%'
+          },
+          {
+            title: '出价时间',
+            key: 'bidTime',
+            width: '40%'
+          }
+        ]
       }
     },
     async created() {
@@ -552,7 +602,26 @@
             console.error('检查钱包状态失败:', error)
           }
         }
-      }
+      },
+      openBidHistoryModal(item) {
+        this.selectedItem = item;
+        this.showBidHistory = true;
+        this.loadBidHistory(item.id);
+      },
+      async loadBidHistory(itemId) {
+        if (!itemId) return;
+        try {
+          this.loadingBidHistory = true;
+          const response = await axios.get(`/api/jdbc/copyright/${itemId}/bid-history`);
+          this.bidHistoryData = response.data && response.data.length > 0 ? response.data : [];
+        } catch (error) {
+          console.error('加载出价历史失败:', error);
+          this.$Message.error('加载出价历史失败');
+          this.bidHistoryData = [];
+        } finally {
+          this.loadingBidHistory = false;
+        }
+      },
     }
   }
 </script>
@@ -630,5 +699,14 @@
     margin-left: auto;
     background-color: #2d8cf0;
     border-color: #2d8cf0;
+  }
+  .bid-history {
+    max-height: 400px;
+    overflow-y: auto;
+  }
+  .no-bids {
+    text-align: center;
+    padding: 20px;
+    color: #808695;
   }
 </style>

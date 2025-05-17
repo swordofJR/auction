@@ -445,6 +445,68 @@ public class CopyrightJdbcService {
         }, auctionId);
     }
 
+    /**
+     * 获取竞品交易历史
+     * 
+     * @param auctionId 竞品ID
+     * @return 交易历史列表
+     */
+    public List<Map<String, Object>> getTransactionHistory(Long auctionId) {
+        String sql = "SELECT th.*, seller.username as seller_name, buyer.username as buyer_name " +
+                "FROM transaction_history th " +
+                "LEFT JOIN users seller ON th.seller_id = seller.id " +
+                "LEFT JOIN users buyer ON th.buyer_id = buyer.id " +
+                "WHERE th.auction_id = ? " +
+                "ORDER BY th.transaction_time DESC";
+
+        return jdbcTemplate.query(sql, (rs, rowNum) -> {
+            Map<String, Object> result = new HashMap<>();
+            result.put("id", rs.getLong("id"));
+            result.put("auctionId", rs.getLong("auction_id"));
+            result.put("sellerId", rs.getLong("seller_id"));
+            result.put("buyerId", rs.getLong("buyer_id"));
+            result.put("finalPrice", rs.getBigDecimal("final_price"));
+            result.put("transactionHash", rs.getString("transaction_hash"));
+            result.put("transactionTime", rs.getTimestamp("transaction_time").toLocalDateTime());
+            result.put("sellerName", rs.getString("seller_name"));
+            result.put("buyerName", rs.getString("buyer_name"));
+            return result;
+        }, auctionId);
+    }
+
+    /**
+     * 获取用户的交易历史(作为买家或卖家)
+     * 
+     * @param userId 用户ID
+     * @return 交易历史列表
+     */
+    public List<Map<String, Object>> getUserTransactionHistory(Long userId) {
+        String sql = "SELECT th.*, seller.username as seller_name, buyer.username as buyer_name, ai.title, ai.img_url "
+                +
+                "FROM transaction_history th " +
+                "LEFT JOIN users seller ON th.seller_id = seller.id " +
+                "LEFT JOIN users buyer ON th.buyer_id = buyer.id " +
+                "LEFT JOIN auction_items ai ON th.auction_id = ai.id " +
+                "WHERE th.seller_id = ? OR th.buyer_id = ? " +
+                "ORDER BY th.transaction_time DESC";
+
+        return jdbcTemplate.query(sql, (rs, rowNum) -> {
+            Map<String, Object> result = new HashMap<>();
+            result.put("id", rs.getLong("id"));
+            result.put("auctionId", rs.getLong("auction_id"));
+            result.put("sellerId", rs.getLong("seller_id"));
+            result.put("buyerId", rs.getLong("buyer_id"));
+            result.put("finalPrice", rs.getBigDecimal("final_price"));
+            result.put("transactionHash", rs.getString("transaction_hash"));
+            result.put("transactionTime", rs.getTimestamp("transaction_time").toLocalDateTime());
+            result.put("sellerName", rs.getString("seller_name"));
+            result.put("buyerName", rs.getString("buyer_name"));
+            result.put("title", rs.getString("title"));
+            result.put("imgUrl", rs.getString("img_url"));
+            return result;
+        }, userId, userId);
+    }
+
     private static class CopyrightRowMapper implements RowMapper<AuctionItems> {
         @Override
         public AuctionItems mapRow(ResultSet rs, int rowNum) throws SQLException {
