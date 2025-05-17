@@ -15,7 +15,6 @@
   require('echarts/lib/component/tooltip')
   require('echarts/lib/component/title')
   require('echarts/lib/component/legend')
-
   export default {
     name: 'VmChartBarLine',
     props: {

@@ -1,10 +1,8 @@
 <template>
-
   <li v-show="show">
     <slot></slot>
   </li>
 </template>
-
 <script>
   export default {
     name: 'VmTabsItem',

@@ -39,7 +39,6 @@
         </VmCard>
       </Col>
     </Row>
-
     <!-- Auction Dialog -->
     <Modal v-model="showAuctionDialog" title="确认购买" @on-ok="handleAuctionConfirm" :ok-text="loading ? '处理中...' : '确认购买'" :loading="loading" :maskClosable="!loading" :closable="!loading">
       <div class="auction-dialog-content">
@@ -64,14 +63,12 @@
     </Modal>
   </div>
 </template>
-
 <script>
   import VmCard from '@/components/vm-card'
   import axios from 'axios'
   import Web3 from 'web3'
   import { abi } from '../contracts/CopyrightNFT.json'
   import { contractAddress } from '../contracts/config'
-  
   export default {
     name: 'VmImageList',
     components: {
@@ -354,7 +351,6 @@
     }
   }
 </script>
-
 <style scoped>
 .auction-dialog-content {
   padding: 20px;
@@ -382,7 +378,6 @@
 .auction-form {
   margin-top: 20px;
 }
-
 .bidding-note {
   color: #ff9900;
   font-size: 12px;

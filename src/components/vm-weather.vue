@@ -25,7 +25,6 @@
    </Row>
   </Row>
 </template>
-
 <script>
   export default {
     name: 'VmWeather',

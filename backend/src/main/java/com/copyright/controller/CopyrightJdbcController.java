@@ -193,29 +193,24 @@ public class CopyrightJdbcController {
     }
 
     /**
-     * 获取版权详情
-     * 注意：这个端点必须放在最后，避免与其他路径冲突
-     */
-    @GetMapping("/{id}")
-    public ResponseEntity<AuctionItems> getCopyright(@PathVariable Long id) {
-        AuctionItems copyright = copyrightJdbcService.getCopyright(id);
-        if (copyright != null) {
-            return ResponseEntity.ok(copyright);
-        }
-        return ResponseEntity.notFound().build();
-    }
-
-    /**
      * 下架版权
      */
     @PostMapping("/{id}/delist")
-    public ResponseEntity<AuctionItems> delistCopyright(
-            @PathVariable Long id) {
-        AuctionItems copyright = copyrightJdbcService.delistCopyright(id);
-        if (copyright != null) {
-            return ResponseEntity.ok(copyright);
+    public ResponseEntity<?> delistCopyright(@PathVariable Long id,
+            @RequestParam(required = false) String newOwnerAddress,
+            @RequestParam(required = false) BigDecimal finalPrice,
+            @RequestParam(required = false) String transactionHash, @RequestParam(required = false) Long newOwnerId,
+            @RequestParam(defaultValue = "false") boolean forceEnd) {
+        try {
+            AuctionItems copyright = copyrightJdbcService.delistCopyright(id, newOwnerAddress, finalPrice,
+                    transactionHash, newOwnerId, forceEnd);
+            if (copyright != null) {
+                return ResponseEntity.ok(copyright);
+            }
+            return ResponseEntity.badRequest().body(null);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
-        return ResponseEntity.badRequest().build();
     }
 
     /**
@@ -251,5 +246,53 @@ public class CopyrightJdbcController {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
+    }
+
+    /**
+     * 出价
+     */
+    @PostMapping("/{id}/bid")
+    public ResponseEntity<?> placeBid(
+            @PathVariable Long id,
+            @RequestParam Long userId,
+            @RequestParam BigDecimal bidAmount,
+            @RequestParam String bidderAddress,
+            @RequestParam(required = false) String transactionHash) {
+        try {
+            AuctionItems auctionItem = copyrightJdbcService.placeBid(id, userId, bidAmount, bidderAddress,
+                    transactionHash);
+            if (auctionItem != null) {
+                return ResponseEntity.ok(auctionItem);
+            }
+            return ResponseEntity.badRequest().body("出价失败：价格必须高于当前价格");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    /**
+     * 获取出价历史
+     */
+    @GetMapping("/{id}/bid-history")
+    public ResponseEntity<?> getBidHistory(@PathVariable Long id) {
+        try {
+            List<Map<String, Object>> bidHistory = copyrightJdbcService.getBidHistory(id);
+            return ResponseEntity.ok(bidHistory);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    /**
+     * 获取版权详情
+     * 注意：这个端点必须放在最后，避免与其他路径冲突
+     */
+    @GetMapping("/{id}")
+    public ResponseEntity<AuctionItems> getCopyright(@PathVariable Long id) {
+        AuctionItems copyright = copyrightJdbcService.getCopyright(id);
+        if (copyright != null) {
+            return ResponseEntity.ok(copyright);
+        }
+        return ResponseEntity.notFound().build();
     }
 }

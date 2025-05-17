@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS users (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- 创建竞品拍卖表
-CREATE TABLE IF NOT EXISTS auctionItems (
+CREATE TABLE IF NOT EXISTS auction_items (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
   title VARCHAR(255) NOT NULL,
   description TEXT NOT NULL,
@@ -34,6 +34,33 @@ CREATE TABLE IF NOT EXISTS auctionItems (
   updated_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   auction_start_time TIMESTAMP,
   auction_end_time TIMESTAMP
+);
+
+-- 创建出价历史表
+CREATE TABLE IF NOT EXISTS bid_history (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    auction_id BIGINT NOT NULL,
+    bidder_id BIGINT NOT NULL,
+    bidder_address VARCHAR(42) NOT NULL,
+    bid_amount DECIMAL(20,8) NOT NULL,
+    transaction_hash VARCHAR(66),
+    bid_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (auction_id) REFERENCES auction_items(id),
+    FOREIGN KEY (bidder_id) REFERENCES users(id)
+);
+
+-- 创建交易历史表
+CREATE TABLE IF NOT EXISTS transaction_history (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    auction_id BIGINT NOT NULL,
+    seller_id BIGINT NOT NULL,
+    buyer_id BIGINT NOT NULL,
+    final_price DECIMAL(20,8) NOT NULL,
+    transaction_hash VARCHAR(66),
+    transaction_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (auction_id) REFERENCES auction_items(id),
+    FOREIGN KEY (seller_id) REFERENCES users(id),
+    FOREIGN KEY (buyer_id) REFERENCES users(id)
 );
 
 -- 添加索引

@@ -21,7 +21,6 @@
             </div>
           </div>
         </Row>
-
         <Row v-else type="flex" justify="space-around">
           <div class="left">
             <div class="content panel-body">
@@ -42,7 +41,6 @@
     </ul>
   </Row>
 </template>
-
 <script>
   export default {
     name: 'VmTimeline',

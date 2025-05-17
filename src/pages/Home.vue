@@ -3,12 +3,12 @@
     <Row class="header" type="flex" align="middle">
       <div class="logo">
         <img src="../assets/img/logo2.png" height="30" alt="">
-        <span></span>基于区块链的数字藏品版权保护系统<Tag></Tag>
+        <span></span>基于区块链的竞拍品存证溯源应用管理系统<Tag></Tag>
       </div>
       <!-- <VmMsgPush style="margin-left:20px" :data="msgPushData"></VmMsgPush> -->
       <Dropdown class="login-info" placement="bottom-end">
         <Button type="ghost">
-            <img src="../assets/img/photo.jpg" height="30" alt="">{{ currentUser.username }}
+            <img src="../assets/img/photo1.jpg" height="30" alt="">{{ currentUser.username }}
             <Icon type="arrow-down-b"></Icon>
         </Button> 
         <Dropdown-menu slot="list">
@@ -55,18 +55,18 @@
                 拍卖市场  
               </router-link>
           </Menu-item>
-          <Menu-item name="AuctionMarketplace" v-if="canAccessMarket">
+          <!-- <Menu-item name="AuctionMarketplace" v-if="canAccessMarket">
               <router-link to="/auction-marketplace">
                 <i class="fa fa-gavel"></i>
                 竞品拍卖市场  
               </router-link>
-          </Menu-item>
-          <Menu-item name="ImageList" v-if="canAccessMarket">
+          </Menu-item> -->
+          <!-- <Menu-item name="ImageList" v-if="canAccessMarket">
               <router-link to="/imagelist">
                 <i class="fa fa-shopping-bag"></i>
                 数字藏品交易市场  
               </router-link>
-          </Menu-item>
+          </Menu-item> -->
           <!-- <Menu-item name="Charts">
               <router-link to="/charts">
                 <i class="fa fa-bar-chart"></i>
@@ -113,7 +113,6 @@
                 </router-link>
               </Menu-item>
           </Submenu> -->
-          
           <!-- <Submenu name="Pages">
               <template slot="title">
                   <i class="fa fa-file"></i>

@@ -1,7 +1,6 @@
 <template>
   <div class="basic-table vm-margin">
     <VmTable title="我的竞品拍卖" :columns="dataColumns" :data="dataTable"></VmTable>
-    
     <!-- 发布竞品拍卖弹窗 -->
     <Modal v-model="publishModal" title="发布竞品到拍卖市场" width="600">
       <div v-if="selectedItem" class="item-info">
@@ -14,11 +13,9 @@
           <p><strong>拍卖结束时间：</strong> {{ formatDateTime(selectedItem.auctionEndTime) }}</p>
           <p><strong>创建时间：</strong> {{ formatDateTime(selectedItem.createdTime) }}</p>
         </div>
-        
         <div class="item-image" v-if="selectedItem.imgUrl">
           <img :src="require('../assets/img/bg.jpg')" alt="竞品图片" style="max-width: 100%; max-height: 200px;">
         </div>
-        
         <div class="attachments" v-if="selectedItem.attachmentPaths">
           <p><strong>附件文件：</strong></p>
           <ul class="attachment-list">
@@ -29,7 +26,6 @@
             </li>
           </ul>
         </div>
-        
         <div class="price-input">
           <p><strong>请输入起拍价(ETH)：</strong></p>
           <InputNumber 
@@ -54,14 +50,12 @@
     </Modal>
   </div>
 </template>
-
 <script>
   import VmTable from '@/components/vm-table'
   import axios from 'axios'
   import Web3 from 'web3'
   import { abi } from '../contracts/CopyrightNFT.json'
   import { contractAddress } from '../contracts/config'
-
   export default {
     name: 'BasicTable',
     components: {
@@ -224,10 +218,10 @@
         }
       },
       loadUserItems() {
-        if (!this.currentUser) {
-          this.$Message.error('请先登录')
-          return
-        }
+        // if (!this.currentUser) {
+        //   this.$Message.error('请先登录')
+        //   return
+        // }
         // 使用用户ID查询其竞品（优先），包含用户名信息
         if (this.currentUser.id) {
           axios.get(`/api/jdbc/copyright/user-id/${this.currentUser.id}/with-username`)
@@ -374,53 +368,43 @@
     }
   }
 </script>
-
 <style scoped>
   .basic-table {
     width: 100%;
   }
-  
   .item-info {
     margin-bottom: 20px;
   }
-  
   .item-header h3 {
     margin-bottom: 15px;
     color: #17233d;
   }
-  
   .item-header p {
     margin-bottom: 10px;
   }
-  
   .item-image {
     margin: 15px 0;
     text-align: center;
   }
-  
   .attachments {
     margin: 15px 0;
     border-top: 1px solid #e8eaec;
     padding-top: 15px;
   }
-  
   .attachment-list {
     list-style: none;
     padding: 0;
     margin: 10px 0;
   }
-  
   .attachment-link {
     color: #2d8cf0;
     cursor: pointer;
     display: inline-block;
     margin-bottom: 5px;
   }
-  
   .attachment-link:hover {
     text-decoration: underline;
   }
-  
   .price-input {
     margin-top: 20px;
     padding-top: 15px;

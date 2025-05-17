@@ -287,10 +287,120 @@ public class CopyrightJdbcService {
         return updated > 0 ? getCopyright(id) : null;
     }
 
-    public AuctionItems delistCopyright(Long id) {
-        String sql = "UPDATE auction_items SET status = 'DELISTED', updated_time = ? WHERE id = ? AND status = 'LISTED'";
-        int updated = jdbcTemplate.update(sql, LocalDateTime.now(), id);
+    public AuctionItems delistCopyright(Long id, String newOwnerAddress, BigDecimal finalPrice, String transactionHash,
+            Long newOwnerId, boolean forceEnd) {
+        // 获取拍卖物品信息
+        AuctionItems auctionItem = getCopyright(id);
+        if (auctionItem == null) {
+            throw new RuntimeException("拍卖物品不存在");
+        }
+
+        // 检查拍卖是否可以结束
+        LocalDateTime now = LocalDateTime.now();
+        boolean isExpired = now.isAfter(auctionItem.getAuctionEndTime());
+
+        // 如果不是强制结束且拍卖未到期，则不允许结束拍卖
+        if (!forceEnd && !isExpired) {
+            throw new RuntimeException("拍卖未到期，无法结束");
+        }
+
+        // 如果是拍卖到期自然结束，需要查询最高出价信息
+        if (newOwnerAddress == null || "unknown".equals(newOwnerAddress)) {
+            String bidSql = "SELECT bidder_id, bidder_address, bid_amount FROM bid_history " +
+                    "WHERE auction_id = ? ORDER BY bid_amount DESC LIMIT 1";
+            List<Map<String, Object>> bids = jdbcTemplate.query(bidSql, (rs, rowNum) -> {
+                Map<String, Object> bid = new HashMap<>();
+                bid.put("bidderId", rs.getLong("bidder_id"));
+                bid.put("bidderAddress", rs.getString("bidder_address"));
+                bid.put("bidAmount", rs.getBigDecimal("bid_amount"));
+                return bid;
+            }, id);
+
+            // 如果有人出价，则更新所有者为最高出价者
+            if (!bids.isEmpty()) {
+                Map<String, Object> highestBid = bids.get(0);
+                newOwnerAddress = (String) highestBid.get("bidderAddress");
+                finalPrice = (BigDecimal) highestBid.get("bidAmount");
+                newOwnerId = (Long) highestBid.get("bidderId");
+            } else {
+                // 如果没有人出价，则不改变所有权
+                newOwnerAddress = auctionItem.getOwnerAddress();
+                newOwnerId = auctionItem.getUserId();
+            }
+        }
+
+        // 记录交易历史
+        if (finalPrice != null && !auctionItem.getOwnerAddress().equals(newOwnerAddress)) {
+            String historySQL = "INSERT INTO transaction_history (auction_id, seller_id, buyer_id, final_price, transaction_hash, transaction_time) VALUES (?, ?, ?, ?, ?, ?)";
+            jdbcTemplate.update(historySQL, id, auctionItem.getUserId(), newOwnerId, finalPrice, transactionHash, now);
+        }
+
+        // 更新拍卖状态和所有者信息
+        String sql = "UPDATE auction_items SET status = ?, owner_address = ?, user_id = ?, current_price = ?, updated_time = ? WHERE id = ? AND status = 'LISTED'";
+        int updated = jdbcTemplate.update(sql, "SOLD", newOwnerAddress, newOwnerId, finalPrice, now, id);
+
         return updated > 0 ? getCopyright(id) : null;
+    }
+
+    public AuctionItems placeBid(Long id, Long userId, BigDecimal bidAmount, String bidderAddress,
+            String transactionHash) {
+        // 获取拍卖物品信息
+        AuctionItems auctionItem = getCopyright(id);
+        if (auctionItem == null) {
+            throw new RuntimeException("拍卖物品不存在");
+        }
+
+        // 检查拍卖状态
+        if (!"LISTED".equals(auctionItem.getStatus())) {
+            throw new RuntimeException("拍卖已结束或未开始");
+        }
+
+        // 检查拍卖时间
+        LocalDateTime now = LocalDateTime.now();
+        if (now.isBefore(auctionItem.getAuctionStartTime())) {
+            throw new RuntimeException("拍卖尚未开始");
+        }
+        if (now.isAfter(auctionItem.getAuctionEndTime())) {
+            throw new RuntimeException("拍卖已结束");
+        }
+
+        // 检查出价是否高于当前价格
+        if (auctionItem.getCurrentPrice() != null && bidAmount.compareTo(auctionItem.getCurrentPrice()) <= 0) {
+            return null;
+        }
+
+        // 更新拍卖物品价格
+        String updateSql = "UPDATE auction_items SET current_price = ?, updated_time = ? WHERE id = ? AND status = 'LISTED'";
+        int updated = jdbcTemplate.update(updateSql, bidAmount, now, id);
+        if (updated == 0) {
+            throw new RuntimeException("更新拍卖价格失败");
+        }
+
+        // 记录出价历史
+        String insertBidSql = "INSERT INTO bid_history (auction_id, bidder_id, bidder_address, bid_amount, transaction_hash) VALUES (?, ?, ?, ?, ?)";
+        jdbcTemplate.update(insertBidSql, id, userId, bidderAddress, bidAmount, transactionHash);
+
+        return getCopyright(id);
+    }
+
+    public List<Map<String, Object>> getBidHistory(Long auctionId) {
+        String sql = "SELECT bh.*, u.username as bidder_name FROM bid_history bh " +
+                "LEFT JOIN users u ON bh.bidder_id = u.id " +
+                "WHERE bh.auction_id = ? " +
+                "ORDER BY bh.bid_time DESC";
+
+        return jdbcTemplate.query(sql, (rs, rowNum) -> {
+            Map<String, Object> result = new HashMap<>();
+            result.put("id", rs.getLong("id"));
+            result.put("auctionId", rs.getLong("auction_id"));
+            result.put("bidderId", rs.getLong("bidder_id"));
+            result.put("bidderAddress", rs.getString("bidder_address"));
+            result.put("bidAmount", rs.getBigDecimal("bid_amount"));
+            result.put("transactionHash", rs.getString("transaction_hash"));
+            result.put("bidTime", rs.getTimestamp("bid_time").toLocalDateTime());
+            result.put("bidderName", rs.getString("bidder_name"));
+            return result;
+        }, auctionId);
     }
 
     private static class CopyrightRowMapper implements RowMapper<AuctionItems> {

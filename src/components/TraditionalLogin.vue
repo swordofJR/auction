@@ -25,10 +25,8 @@
     </div>
   </div>
 </template>
-
 <script>
 import axios from 'axios'
-
 export default {
   name: 'TraditionalLogin',
   data() {
@@ -77,7 +75,6 @@ export default {
   }
 }
 </script>
-
 <style scoped>
 .traditional-login {
   width: 100vw;

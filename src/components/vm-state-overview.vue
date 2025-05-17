@@ -9,7 +9,6 @@
     </Col>
   </Row>
 </template>
-
 <script>
 export default {
   name: 'StateOverView',

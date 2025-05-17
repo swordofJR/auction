@@ -5,14 +5,12 @@
     @delist-success="handleDelistSuccess">
   </VmImageList>
 </template>
-
 <script>
   import VmImageList from '@/components/vm-image-list'
   import axios from 'axios'
   import Web3 from 'web3'
   import { abi } from '../contracts/CopyrightNFT.json'
   import { contractAddress } from '../contracts/config'
-  
   export default {
     name: '竞品拍卖交易',
     components: {

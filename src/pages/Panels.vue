@@ -4,11 +4,9 @@
       <FormItem label="竞品标题" required>
         <Input v-model="formItem.title" placeholder="请输入竞品完整标题" style="width: 400px"></Input>
       </FormItem>
-      
       <FormItem label="竞品描述" required>
         <Input v-model="formItem.description" type="textarea" :rows="4" style="width: 400px"></Input>
       </FormItem>
-
       <FormItem label="竞品照片" required>
         <Upload 
           ref="upload"
@@ -29,7 +27,6 @@
           </div>
         </Upload>
       </FormItem>
-
       <FormItem label="竞品类别" required>
         <Select v-model="formItem.category" style="width: 400px">
           <Option v-for="(cat, index) in categories" 
@@ -37,7 +34,6 @@
                  :key="index">{{ cat }}</Option>
         </Select>
       </FormItem>
-
       <FormItem label="起拍价(ETH)" required>
         <InputNumber 
           v-model="formItem.startPrice" 
@@ -46,7 +42,6 @@
           style="width: 400px"
           placeholder="输入起拍价格"></InputNumber>
       </FormItem>
-
       <FormItem label="拍卖开始时间" required>
         <DatePicker 
           v-model="formItem.auctionStartTime" 
@@ -54,7 +49,6 @@
           style="width: 400px"
           placeholder="请选择开始时间"></DatePicker>
       </FormItem>
-
       <FormItem label="拍卖结束时间" required>
         <DatePicker 
           v-model="formItem.auctionEndTime" 
@@ -62,7 +56,6 @@
           style="width: 400px"
           placeholder="请选择结束时间"></DatePicker>
       </FormItem>
-
       <FormItem label="附带文件">
         <Upload 
           ref="attachmentUpload"
@@ -77,7 +70,6 @@
           </div>
         </Upload>
       </FormItem>
-
       <FormItem>
         <Button 
           type="primary" 
@@ -89,7 +81,6 @@
         </Button>
       </FormItem>
     </Form>
-
     <!-- Success Dialog -->
     <Modal
       v-model="showSuccessDialog"
@@ -101,13 +92,11 @@
     </Modal>
   </div>
 </template>
-
 <script>
 import Web3 from 'web3';
 import axios from 'axios';
 import { abi } from '../contracts/CopyrightNFT.json';
 import { contractAddress } from '../contracts/config';
-
 export default {
   data() {
     return {
@@ -211,13 +200,11 @@ export default {
         this.$Message.warning('请完善所有必填信息');
         return;
       }
-
       // 检查拍卖时间是否合理
       if (this.formItem.auctionStartTime >= this.formItem.auctionEndTime) {
         this.$Message.warning('拍卖结束时间必须晚于开始时间');
         return;
       }
-
       this.loading = true;
       let blockchainSuccess = false;
       try {
@@ -359,19 +346,16 @@ export default {
   }
 }
 </script>
-
 <style scoped>
 .panel-form {
   text-align: left;
   position: relative;
   padding: 40px;
-  background-image: url('../assets/img/bg.jpg');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
   min-height: 100vh;
 }
-
 .panel-form::before {
   content: '';
   position: absolute;
@@ -382,12 +366,10 @@ export default {
   background-color: rgba(255, 255, 255, 0.5);
   z-index: 1;
 }
-
 .panel-form > * {
   position: relative;
   z-index: 2;
 }
-
 .upload-area {
   padding: 20px;
   text-align: left;
@@ -398,22 +380,18 @@ export default {
   background-color: rgba(250, 250, 250, 0.9);
   width: 400px;
 }
-
 .upload-text {
   margin-top: 10px;
   text-align: left;
 }
-
 .upload-area:hover {
   border-color: #1890ff;
   background-color: #f0f7ff;
 }
-
 .preview-image {
   margin-top: 20px;
   text-align: left;
 }
-
 .preview-image img {
   max-width: 200px;
   max-height: 200px;
@@ -421,28 +399,23 @@ export default {
   border-radius: 4px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
-
 .file-name {
   margin-top: 10px;
   color: #666;
   font-size: 14px;
   text-align: left;
 }
-
 .ml-10 {
   margin-left: 10px;
 }
-
 .ivu-form-item {
   margin-bottom: 24px;
 }
-
 .ivu-form-item-label {
   font-size: 14px;
   color: #333;
   font-weight: 500;
 }
-
 .ivu-input-wrapper, .ivu-select, .ivu-date-picker, .ivu-input-number {
   text-align: left;
 }

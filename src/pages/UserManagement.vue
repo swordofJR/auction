@@ -12,7 +12,6 @@
       </div>
       <Table border :columns="columns" :data="filteredUsers" :loading="loading"></Table>
     </Card>
-
     <!-- 添加用户对话框 -->
     <Modal v-model="addUserModal" title="新增用户" @on-ok="addUser" :loading="modalLoading">
       <Form :model="newUser" :rules="rules" ref="newUserForm">
@@ -33,10 +32,8 @@
     </Modal>
   </div>
 </template>
-
 <script>
 import axios from 'axios'
-
 export default {
   name: 'UserManagement',
   data() {
@@ -292,7 +289,6 @@ export default {
   }
 }
 </script>
-
 <style scoped>
 .panel-container {
   padding: 10px;

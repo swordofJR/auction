@@ -36,7 +36,6 @@
     </Row>
   </div>
 </template>
-
 <script>
   import VmCard from '@/components/vm-card'
   import VmStateGroup from '@/components/vm-state-group'

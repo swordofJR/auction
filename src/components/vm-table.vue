@@ -69,7 +69,6 @@
     </Modal>
   </Row>
 </template>
-
 <script>
   export default {
     name: 'VmTable',

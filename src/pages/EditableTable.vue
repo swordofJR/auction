@@ -9,7 +9,6 @@
              v-on:reject-ok="rejectCopyright"
            class="vm-margin">
   </VmTable>
-    
     <!-- 竞品详情弹窗 -->
     <Modal v-model="detailsModal" title="竞品详情" width="600">
       <div v-if="selectedCopyright">
@@ -32,7 +31,6 @@
         <Button type="primary" @click="detailsModal = false">关闭</Button>
       </div>
     </Modal>
-    
     <!-- 驳回原因弹窗 -->
     <Modal v-model="rejectModal" title="驳回原因">
       <Input v-model="rejectReason" type="textarea" :rows="4" placeholder="请输入驳回原因..."></Input>
@@ -43,11 +41,9 @@
     </Modal>
   </div>
 </template>
-
 <script>
   import VmTable from '@/components/vm-table'
   import axios from 'axios'
-  
   export default {
     name: 'EditableTable',
     components: {
@@ -156,7 +152,6 @@
     }
   }
 </script>
-
 <style scoped>
 .copyright-info p {
   margin-bottom: 10px;

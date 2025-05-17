@@ -5,7 +5,6 @@
         Preview
       </div>
       <div v-html="bindHtml">
-        
       </div>
     </div>
     <VmEditor width="100%" class="vm-margin" @upload="setHtml">

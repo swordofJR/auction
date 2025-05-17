@@ -26,7 +26,6 @@
         <Button type="error" size="small" @click="handleDelist">下架商品</Button>
       </div>
     </div>
-
     <!-- 购买确认弹窗 -->
     <Modal
       v-model="showBuyModal"
@@ -64,7 +63,6 @@
         </div>
       </div>
     </Modal>
-
     <div v-if="attachmentPaths" class="card-attachments">
       <p class="attachment-title">附件文件:</p>
       <ul class="attachment-list">
@@ -190,89 +188,73 @@
     }
   }
 </script>
-
 <style lang="less" scoped>
 .buy-modal-content {
   .modal-item {
     margin-bottom: 15px;
     display: flex;
     align-items: flex-start;
-    
     .label {
       width: 80px;
       color: #666;
       font-weight: bold;
     }
-    
     .value {
       flex: 1;
       color: #333;
     }
-    
     .status-available {
       color: #19be6b;
     }
   }
 }
-
 .card-price {
   margin-top: 12px;
   font-weight: bold;
-  
   .price-label {
     color: #666;
   }
-  
   .price-value {
     color: #ff9900;
     font-size: 16px;
   }
 }
-
 .card-owner {
   margin-top: 8px;
-  
   .owner-label {
     color: #666;
     font-weight: bold;
   }
-  
   .owner-value {
     color: #2d8cf0;
   }
 }
-
 .card-actions {
   margin-top: 12px;
   text-align: right;
 }
-
 .card-attachments {
   margin-top: 10px;
   border-top: 1px solid #eee;
   padding-top: 10px;
 }
-
 .attachment-title {
   font-weight: bold;
   font-size: 14px;
   margin-bottom: 5px;
   color: #666;
 }
-
 .attachment-list {
   list-style: none;
   padding: 0;
   margin: 0;
 }
-
 .attachment-link {
   color: #2d8cf0;
   cursor: pointer;
   display: inline-block;
   margin-bottom: 5px;
 }
-
 .attachment-link:hover {
   text-decoration: underline;
 }

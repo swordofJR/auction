@@ -1,167 +1,1 @@
-<template>
-  <div class="all-copyrights vm-margin">
-    <VmTable 
-      title="所有版权信息" 
-      :columns="dataColumns" 
-      :data="dataTable"
-      v-on:details-ok="showDetails">
-    </VmTable>
-    
-    <!-- 版权详情弹窗 -->
-    <Modal v-model="detailsModal" title="版权详情" width="600">
-      <div v-if="selectedCopyright">
-        <div class="copyright-image">
-          <img :src="require('../assets/img/bg.jpg')" style="max-width: 100%; max-height: 300px;" />
-        </div>
-        <div class="copyright-info">
-          <p><strong>标题：</strong> {{ selectedCopyright.title }}</p>
-          <p><strong>描述：</strong> {{ selectedCopyright.description }}</p>
-          <p><strong>类别：</strong> {{ selectedCopyright.category }}</p>
-          <p><strong>状态：</strong> {{ selectedCopyright.status }}</p>
-          <p><strong>拥有者地址：</strong> {{ selectedCopyright.ownerAddress }}</p>
-          <p><strong>拥有者ID：</strong> {{ selectedCopyright.userId }}</p>
-          <p><strong>拥有者：</strong> {{ selectedCopyright.username || '未知' }}</p>
-          <p v-if="selectedCopyright.price"><strong>价格：</strong> {{ selectedCopyright.price }} ETH</p>
-          <p><strong>创建时间：</strong> {{ formatDateTime(selectedCopyright.createdTime) }}</p>
-          <p><strong>更新时间：</strong> {{ formatDateTime(selectedCopyright.updatedTime) }}</p>
-        </div>
-      </div>
-      <div slot="footer">
-        <Button type="primary" @click="detailsModal = false">关闭</Button>
-      </div>
-    </Modal>
-  </div>
-</template>
-
-<script>
-import VmTable from '@/components/vm-table'
-import axios from 'axios'
-export default {
-  name: 'AllCopyrights',
-  components: {
-    VmTable
-  },
-  data() {
-    return {
-      dataColumns: [
-        {
-          id: '1',
-          title: 'ID',
-          key: 'id',
-          sortable: true
-        },
-        {
-          id: '2',
-          title: '标题',
-          key: 'title',
-          sortable: true
-        },
-        {
-          id: '3',
-          title: '状态',
-          key: 'status',
-          sortable: true
-        },
-        {
-          id: '4',
-          title: '类别',
-          key: 'category',
-          sortable: true
-        },
-        {
-          id: '5',
-          title: '所有者',
-          key: 'username',
-          sortable: true
-        },
-        {
-          id: '6',
-          title: '创建时间',
-          key: 'createdTime',
-          sortable: true,
-          render: (h, params) => {
-            return h('div', this.formatDateTime(params.row.createdTime))
-          }
-        },
-        {
-          id: '7',
-          title: '操作',
-          key: 'action',
-          width: 150,
-          align: 'center',
-          render: (h, params) => {
-            return h('div', [
-              h('Button', {
-                props: {
-                  type: 'primary',
-                  size: 'small'
-                },
-                on: {
-                  click: () => {
-                    this.showDetails(params.row)
-                  }
-                }
-              }, '详情')
-            ])
-          }
-        }
-      ],
-      dataTable: [],
-      detailsModal: false,
-      selectedCopyright: null,
-      refreshInterval: null
-    }
-  },
-  mounted() {
-    this.loadAllCopyrights()
-    // 设置定时刷新，每30秒更新一次数据
-    this.refreshInterval = setInterval(() => {
-      this.refreshData()
-    }, 30000)
-  },
-  activated() {
-    this.loadAllCopyrights()
-  },
-  beforeDestroy() {
-    // 组件销毁前清除定时器
-    if (this.refreshInterval) {
-      clearInterval(this.refreshInterval)
-    }
-  },
-  methods: {
-    refreshData() {
-      console.log('刷新版权信息数据...')
-      this.loadAllCopyrights()
-    },
-    loadAllCopyrights() {
-      axios.get('/api/jdbc/copyright/all-with-users')
-        .then(response => {
-          this.dataTable = response.data
-        })
-        .catch(error => {
-          this.$Message.error('加载版权信息失败')
-          console.error('加载版权信息失败:', error)
-        })
-    },
-    formatDateTime(dateTimeStr) {
-      if (!dateTimeStr) return '';
-      const date = new Date(dateTimeStr);
-      return date.toLocaleString();
-    },
-    showDetails(copyright) {
-      this.selectedCopyright = copyright
-      this.detailsModal = true
-    }
-  }
-}
-</script>
-
-<style scoped>
-.copyright-info p {
-  margin-bottom: 10px;
-}
-.copyright-image {
-  text-align: center;
-  margin-bottom: 20px;
-}
-</style> 
+<template>  <div class="all-copyrights vm-margin">    <VmTable       title="所有版权信息"       :columns="dataColumns"       :data="dataTable"      v-on:details-ok="showDetails">    </VmTable>    <!-- 版权详情弹窗 -->    <Modal v-model="detailsModal" title="版权详情" width="600">      <div v-if="selectedCopyright">        <div class="copyright-image">          <img :src="require('../assets/img/bg.jpg')" style="max-width: 100%; max-height: 300px;" />        </div>        <div class="copyright-info">          <p><strong>标题：</strong> {{ selectedCopyright.title }}</p>          <p><strong>描述：</strong> {{ selectedCopyright.description }}</p>          <p><strong>类别：</strong> {{ selectedCopyright.category }}</p>          <p><strong>状态：</strong> {{ selectedCopyright.status }}</p>          <p><strong>拥有者地址：</strong> {{ selectedCopyright.ownerAddress }}</p>          <p><strong>拥有者ID：</strong> {{ selectedCopyright.userId }}</p>          <p><strong>拥有者：</strong> {{ selectedCopyright.username || '未知' }}</p>          <p v-if="selectedCopyright.price"><strong>价格：</strong> {{ selectedCopyright.price }} ETH</p>          <p><strong>创建时间：</strong> {{ formatDateTime(selectedCopyright.createdTime) }}</p>          <p><strong>更新时间：</strong> {{ formatDateTime(selectedCopyright.updatedTime) }}</p>        </div>      </div>      <div slot="footer">        <Button type="primary" @click="detailsModal = false">关闭</Button>      </div>    </Modal>  </div></template><script>import VmTable from '@/components/vm-table'import axios from 'axios'export default {  name: 'AllCopyrights',  components: {    VmTable  },  data() {    return {      dataColumns: [        {          id: '1',          title: 'ID',          key: 'id',          sortable: true        },        {          id: '2',          title: '标题',          key: 'title',          sortable: true        },        {          id: '3',          title: '状态',          key: 'status',          sortable: true        },        {          id: '4',          title: '类别',          key: 'category',          sortable: true        },        {          id: '5',          title: '所有者',          key: 'username',          sortable: true        },        {          id: '6',          title: '创建时间',          key: 'createdTime',          sortable: true,          render: (h, params) => {            return h('div', this.formatDateTime(params.row.createdTime))          }        },        {          id: '7',          title: '操作',          key: 'action',          width: 150,          align: 'center',          render: (h, params) => {            return h('div', [              h('Button', {                props: {                  type: 'primary',                  size: 'small'                },                on: {                  click: () => {                    this.showDetails(params.row)                  }                }              }, '详情')            ])          }        }      ],      dataTable: [],      detailsModal: false,      selectedCopyright: null,      refreshInterval: null    }  },  mounted() {    this.loadAllCopyrights()    // 设置定时刷新，每30秒更新一次数据    this.refreshInterval = setInterval(() => {      this.refreshData()    }, 30000)  },  activated() {    this.loadAllCopyrights()  },  beforeDestroy() {    // 组件销毁前清除定时器    if (this.refreshInterval) {      clearInterval(this.refreshInterval)    }  },  methods: {    refreshData() {      console.log('刷新版权信息数据...')      this.loadAllCopyrights()    },    loadAllCopyrights() {      axios.get('/api/jdbc/copyright/all-with-users')        .then(response => {          this.dataTable = response.data        })        .catch(error => {          this.$Message.error('加载版权信息失败')          console.error('加载版权信息失败:', error)        })    },    formatDateTime(dateTimeStr) {      if (!dateTimeStr) return '';      const date = new Date(dateTimeStr);      return date.toLocaleString();    },    showDetails(copyright) {      this.selectedCopyright = copyright      this.detailsModal = true    }  }}</script><style scoped>.copyright-info p {  margin-bottom: 10px;}.copyright-image {  text-align: center;  margin-bottom: 20px;}</style> 

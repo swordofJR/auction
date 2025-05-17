@@ -33,7 +33,6 @@
    </Col>
   </Row>
 </template>
-
 <script>
 export default {
   name: 'VmLogin',
@@ -57,10 +56,8 @@ export default {
         this.error = '请安装 MetaMask 钱包'
         return
       }
-
       this.connecting = true
       this.error = ''
-
       try {
         // 使用 enable() 方法连接钱包
         const accounts = await window.ethereum.enable()
@@ -74,7 +71,6 @@ export default {
         this.connecting = false
       }
     },
-
     disconnectWallet() {
       this.isConnected = false
       this.account = ''
@@ -82,7 +78,6 @@ export default {
   }
 }
 </script>
-
 <style lang="less" scoped>
 .vm-login {
   width: 1200px;
@@ -92,27 +87,22 @@ export default {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  
   &>div {
     padding: 40px;
     height: 100%;
   }
-  
   .login-form {
     display: flex;
     flex-direction: column;
     justify-content: center;
     background-color: #fff;
     border-radius: 8px 0 0 8px;
-    
     .login-header {
       text-align: center;
       margin-bottom: 40px;
-      
       img {
         margin-bottom: 20px;
       }
-      
       .title {
         font-size: 24px;
         font-weight: bold;
@@ -120,29 +110,23 @@ export default {
         color: #333;
       }
     }
-    
     .wallet-connect {
       text-align: center;
-      
       button {
         width: 100%;
         height: 50px;
         font-size: 18px;
       }
     }
-    
     .wallet-info {
       text-align: center;
-      
       .wallet-address {
         margin-bottom: 20px;
         font-size: 16px;
-        
         i {
           margin-right: 10px;
         }
       }
-      
       button {
         width: 100%;
         height: 50px;
@@ -150,7 +134,6 @@ export default {
       }
     }
   }
-  
   .login-ad {
     height: 100%;
     font-weight: bold;
@@ -159,7 +142,6 @@ export default {
     background: url("../assets/img/login-bg.jpg") no-repeat center center;
     background-size: cover;
     position: relative;
-    
     .photo-author {
       position: absolute;
       right: 20px;

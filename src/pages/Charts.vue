@@ -32,7 +32,6 @@
     </Row>
   </div>
 </template>
-
 <script>
   import VmChartBarLine from '@/components/vm-chart-bar-line'
   import VmChartPie from '@/components/vm-chart-pie'

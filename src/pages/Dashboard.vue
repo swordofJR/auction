@@ -66,7 +66,6 @@
     </Row>
   </div>
 </template>
-
 <script>
 import VmStateOverView from '@/components/vm-state-overview.vue'
 import VmUserPreview from '@/components/vm-user-preview.vue'
@@ -183,7 +182,5 @@ export default {
   }
 }
 </script>
-
 <style lang="less">
-  
 </style>
