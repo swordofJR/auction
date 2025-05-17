@@ -329,17 +329,59 @@ public class CopyrightJdbcService {
             }
         }
 
-        // 记录交易历史
-        if (finalPrice != null && !auctionItem.getOwnerAddress().equals(newOwnerAddress)) {
-            String historySQL = "INSERT INTO transaction_history (auction_id, seller_id, buyer_id, final_price, transaction_hash, transaction_time) VALUES (?, ?, ?, ?, ?, ?)";
-            jdbcTemplate.update(historySQL, id, auctionItem.getUserId(), newOwnerId, finalPrice, transactionHash, now);
-        }
-
         // 更新拍卖状态和所有者信息
         String sql = "UPDATE auction_items SET status = ?, owner_address = ?, user_id = ?, current_price = ?, updated_time = ? WHERE id = ? AND status = 'LISTED'";
         int updated = jdbcTemplate.update(sql, "SOLD", newOwnerAddress, newOwnerId, finalPrice, now, id);
 
-        return updated > 0 ? getCopyright(id) : null;
+        if (updated > 0) {
+            // 记录交易历史
+            if (finalPrice != null && !auctionItem.getOwnerAddress().equals(newOwnerAddress)) {
+                try {
+                    String historySQL = "INSERT INTO transaction_history (auction_id, seller_id, buyer_id, final_price, transaction_hash, transaction_time) VALUES (?, ?, ?, ?, ?, ?)";
+                    jdbcTemplate.update(historySQL, id, auctionItem.getUserId(), newOwnerId, finalPrice,
+                            transactionHash, now);
+
+                    // 为买家创建一个拷贝，状态设为"已审核"，可以直接上架
+                    if (newOwnerId != null && newOwnerId > 0) {
+                        AuctionItems newItem = new AuctionItems();
+                        newItem.setTitle(auctionItem.getTitle());
+                        newItem.setDescription(auctionItem.getDescription());
+                        newItem.setImgUrl(auctionItem.getImgUrl());
+                        newItem.setCategory(auctionItem.getCategory());
+                        newItem.setStatus("APPROVED"); // 设置为已审核状态
+                        newItem.setOwnerAddress(newOwnerAddress);
+                        newItem.setUserId(newOwnerId);
+                        newItem.setStartPrice(finalPrice);
+                        newItem.setCurrentPrice(finalPrice);
+                        newItem.setAttachmentPaths(auctionItem.getAttachmentPaths());
+                        newItem.setCreatedTime(now);
+                        newItem.setUpdatedTime(now);
+                        newItem.setAuctionStartTime(now.plusDays(1));
+                        newItem.setAuctionEndTime(now.plusDays(7));
+
+                        String insertSQL = "INSERT INTO auction_items (title, description, img_url, category, status, "
+                                +
+                                "owner_address, user_id, start_price, current_price, attachment_paths, created_time, " +
+                                "updated_time, auction_start_time, auction_end_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+                        jdbcTemplate.update(insertSQL,
+                                newItem.getTitle(), newItem.getDescription(), newItem.getImgUrl(),
+                                newItem.getCategory(),
+                                newItem.getStatus(), newItem.getOwnerAddress(), newItem.getUserId(),
+                                newItem.getStartPrice(),
+                                newItem.getCurrentPrice(), newItem.getAttachmentPaths(), newItem.getCreatedTime(),
+                                newItem.getUpdatedTime(), newItem.getAuctionStartTime(), newItem.getAuctionEndTime());
+                    }
+                } catch (Exception e) {
+                    // 记录交易历史失败，但不影响拍卖结束
+                    System.err.println("记录交易历史失败: " + e.getMessage());
+                }
+            }
+
+            return getCopyright(id);
+        }
+
+        return null;
     }
 
     public AuctionItems placeBid(Long id, Long userId, BigDecimal bidAmount, String bidderAddress,

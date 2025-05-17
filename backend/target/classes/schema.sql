@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS users (
   updated_time DATETIME NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 创建竞品拍卖表
+-- 创建竞品拍卖表 - 确保表名一致：使用 auction_items
 CREATE TABLE IF NOT EXISTS auction_items (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
   title VARCHAR(255) NOT NULL,
@@ -63,67 +63,41 @@ CREATE TABLE IF NOT EXISTS transaction_history (
     FOREIGN KEY (buyer_id) REFERENCES users(id)
 );
 
--- 添加索引
-CREATE INDEX IF NOT EXISTS idx_auctionItems_status ON auctionItems(status);
-CREATE INDEX IF NOT EXISTS idx_auctionItems_owner ON auctionItems(owner_address);
-CREATE INDEX IF NOT EXISTS idx_auctionItems_user ON auctionItems(user_id);
+-- 添加索引 - 确保表名一致
+CREATE INDEX IF NOT EXISTS idx_auction_items_status ON auction_items(status);
+CREATE INDEX IF NOT EXISTS idx_auction_items_owner ON auction_items(owner_address);
+CREATE INDEX IF NOT EXISTS idx_auction_items_user ON auction_items(user_id);
 
--- 如果copyrights表存在，将数据从copyrights表迁移到auctionItems表（如果有需要）
+-- 删除旧表名的索引
+DROP INDEX IF EXISTS idx_auctionItems_status ON auctionItems;
+DROP INDEX IF EXISTS idx_auctionItems_owner ON auctionItems;
+DROP INDEX IF EXISTS idx_auctionItems_user ON auctionItems;
+
+-- 如果copyrights表存在，将数据从copyrights表迁移到auction_items表（如果有需要）
 -- 注意：需要根据实际情况调整字段
 CREATE PROCEDURE IF NOT EXISTS migrate_data()
 BEGIN
-    DECLARE done INT DEFAULT FALSE;
-    DECLARE v_id BIGINT;
-    DECLARE v_title VARCHAR(255); 
-    DECLARE v_description TEXT;
-    DECLARE v_img_url VARCHAR(255);
-    DECLARE v_category VARCHAR(50);
-    DECLARE v_status VARCHAR(20);
-    DECLARE v_owner_address VARCHAR(255);
-    DECLARE v_user_id BIGINT;
-    DECLARE v_price DECIMAL(20, 8);
-    DECLARE v_reason VARCHAR(255);
-    DECLARE v_created_time TIMESTAMP;
-    DECLARE v_updated_time TIMESTAMP;
-    
-    -- 检查copyrights表是否存在
-    DECLARE copyrights_exists INT DEFAULT 0;
-    SELECT COUNT(*) INTO copyrights_exists FROM information_schema.tables 
-    WHERE table_schema = DATABASE() AND table_name = 'copyrights';
-    
-    -- 如果copyrights表存在且auctionItems表为空，则迁移数据
-    IF copyrights_exists > 0 AND (SELECT COUNT(*) FROM auctionItems) = 0 THEN
-        DECLARE cur CURSOR FOR 
-            SELECT id, title, description, img_url, category, status, owner_address, user_id, 
-                   price, reason, created_time, updated_time 
-            FROM copyrights;
-        DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+    -- 检查auctionitems表是否存在（老表名不带下划线）
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'auction_db' AND table_name = 'auctionitems') THEN
+        -- 如果存在，将数据迁移到新表，并设置外键
+        INSERT IGNORE INTO auction_items 
+        (id, title, description, img_url, category, status, owner_address, user_id, 
+         start_price, current_price, reason, attachment_paths, created_time, updated_time, 
+         auction_start_time, auction_end_time)
+        SELECT 
+         id, title, description, img_url, category, status, owner_address, user_id, 
+         start_price, current_price, reason, attachment_paths, created_time, updated_time, 
+         auction_start_time, auction_end_time
+        FROM auctionitems;
         
-        OPEN cur;
-        
-        read_loop: LOOP
-            FETCH cur INTO v_id, v_title, v_description, v_img_url, v_category, v_status, 
-                           v_owner_address, v_user_id, v_price, v_reason, v_created_time, v_updated_time;
-            IF done THEN
-                LEAVE read_loop;
-            END IF;
-            
-            -- 插入到新表，设置拍卖开始和结束时间为当前时间加1天和7天
-            INSERT INTO auctionItems (id, title, description, img_url, category, status, 
-                                     owner_address, user_id, current_price, start_price, reason, 
-                                     created_time, updated_time, auction_start_time, auction_end_time)
-            VALUES (v_id, v_title, v_description, v_img_url, v_category, v_status, 
-                   v_owner_address, v_user_id, v_price, v_price, v_reason, 
-                   v_created_time, v_updated_time, 
-                   DATE_ADD(NOW(), INTERVAL 1 DAY), DATE_ADD(NOW(), INTERVAL 7 DAY));
-        END LOOP;
-        
-        CLOSE cur;
+        -- 删除旧表
+        SET FOREIGN_KEY_CHECKS = 0;
+        DROP TABLE IF EXISTS auctionitems;
+        SET FOREIGN_KEY_CHECKS = 1;
     END IF;
 END;
 
--- 调用存储过程
+-- 执行迁移过程
 CALL migrate_data();
-
--- 删除存储过程（避免重复执行）
+-- 删除迁移过程
 DROP PROCEDURE IF EXISTS migrate_data; 

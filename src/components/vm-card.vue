@@ -7,6 +7,9 @@
           <i class="fa fa-shopping-bag" @click="openBuyModal"></i>
         </span>
       </div>
+      <!-- 状态标签 -->
+      <span v-if="status === 'APPROVED'" class="status-badge approved">已审核</span>
+      <span v-if="status === 'SOLD'" class="status-badge sold">已出售</span>
     </div>
     <div class="card-desc panel-body">
       <h2>{{ title }}</h2>
@@ -22,7 +25,7 @@
       <a :href="detailUrl">
         <!-- more > -->
       </a>
-      <div class="card-actions" v-if="isAdmin && status === 'LISTED'">
+      <div class="card-actions" v-if="(isAdmin || isSeller) && status === 'LISTED'">
         <Button type="error" size="small" @click="handleDelist">下架商品</Button>
       </div>
     </div>
@@ -145,6 +148,17 @@
       attachmentsArray() {
         if (!this.attachmentPaths) return [];
         return this.attachmentPaths.split(',').filter(path => path.trim() !== '');
+      },
+      isSeller() {
+        // 检查当前用户是否为物品的所有者
+        const userStr = sessionStorage.getItem('user')
+        if (!userStr) return false
+        try {
+          const user = JSON.parse(userStr)
+          return user.id === this.userId || user.address === this.ownerAddress
+        } catch (e) {
+          return false
+        }
       }
     },
     methods: {
@@ -257,5 +271,22 @@
 }
 .attachment-link:hover {
   text-decoration: underline;
+}
+.status-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 3px 8px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: bold;
+}
+.status-badge.approved {
+  background-color: #19be6b;
+  color: white;
+}
+.status-badge.sold {
+  background-color: #ff9900;
+  color: white;
 }
 </style>

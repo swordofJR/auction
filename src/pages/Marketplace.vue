@@ -473,8 +473,10 @@ export default {
         const endTime = new Date(this.selectedItem.auctionEndTime)
         const now = new Date()
         const isCreator = this.currentUser.id === this.selectedItem.userId
-        if (!isCreator && endTime > now) {
-          this.$Message.warning('只有创建者可以在结束时间前终止拍卖')
+        const isAdmin = this.currentUser.role === 'admin'
+        // 管理员可以随时结束拍卖
+        if (!isCreator && !isAdmin && endTime > now) {
+          this.$Message.warning('只有创建者或管理员可以在结束时间前终止拍卖')
           return
         }
         this.$Message.loading({

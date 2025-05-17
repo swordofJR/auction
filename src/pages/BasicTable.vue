@@ -4,6 +4,23 @@
     <!-- 发布竞品拍卖弹窗 -->
     <Modal v-model="publishModal" title="发布竞品到拍卖市场" width="600">
       <div v-if="selectedItem" class="item-info">
+        <!-- 钱包连接状态 -->
+        <div class="wallet-status" :class="{'connected': walletConnected, 'disconnected': !walletConnected}">
+          <Icon :type="walletConnected ? 'ios-checkmark-circle' : 'ios-close-circle'" />
+          <span v-if="walletConnected">
+            MetaMask已连接: {{ walletAddress ? (walletAddress.substring(0, 6) + '...' + walletAddress.substring(walletAddress.length - 4)) : '' }}
+          </span>
+          <span v-else>MetaMask未连接</span>
+          <Button 
+            v-if="!walletConnected" 
+            type="primary" 
+            size="small" 
+            @click="checkAndConnectWallet" 
+            :loading="connectingWallet"
+            class="connect-button">
+            连接MetaMask钱包
+          </Button>
+        </div>
         <div class="item-header">
           <h3>{{ selectedItem.title }}</h3>
           <p><strong>描述：</strong> {{ selectedItem.description }}</p>
@@ -42,9 +59,9 @@
         <Button 
           type="primary" 
           @click="confirmPublish" 
-          :disabled="!publishPrice || publishing"
+          :disabled="!walletConnected || !publishPrice || publishing"
           :loading="publishing">
-          {{ publishing ? '处理中...' : '确认发布' }}
+          {{ publishing ? '处理中...' : (walletConnected ? '确认发布' : '请先连接钱包') }}
         </Button>
       </div>
     </Modal>
@@ -170,10 +187,15 @@
         web3: null,
         contract: null,
         currentUser: null,
-        refreshInterval: null
+        refreshInterval: null,
+        // 钱包相关状态
+        walletConnected: false,
+        walletAddress: '',
+        connectingWallet: false
       }
     },
     async created() {
+      // 初始化Web3连接
       await this.initWeb3()
       // 从sessionStorage获取用户信息
       const userStr = sessionStorage.getItem('user')
@@ -186,6 +208,14 @@
       }
     },
     mounted() {
+      // 检查MetaMask钱包状态
+      this.checkInitialWalletState()
+      // 添加MetaMask账户变化监听
+      if (window.ethereum) {
+        window.ethereum.on('accountsChanged', this.handleAccountsChanged)
+        window.ethereum.on('chainChanged', () => window.location.reload())
+      }
+      // 加载用户竞品数据
       this.loadUserItems()
       // 设置定时刷新，每30秒更新一次数据
       this.refreshInterval = setInterval(() => {
@@ -196,6 +226,10 @@
       this.loadUserItems()
     },
     beforeDestroy() {
+      // 清除MetaMask监听
+      if (window.ethereum) {
+        window.ethereum.removeListener('accountsChanged', this.handleAccountsChanged)
+      }
       // 组件销毁前清除定时器
       if (this.refreshInterval) {
         clearInterval(this.refreshInterval)
@@ -267,7 +301,94 @@
         }
         this.selectedItem = item;
         this.publishPrice = item.startPrice || 0.01;
-        this.publishModal = true;
+        // 检查MetaMask钱包连接状态
+        this.checkAndConnectWallet().then(connected => {
+          if (connected) {
+            this.publishModal = true;
+          } else {
+            this.$Message.warning('请连接MetaMask钱包后再发布拍卖');
+          }
+        });
+      },
+      // 检查并连接MetaMask钱包
+      async checkAndConnectWallet() {
+        if (typeof window.ethereum === 'undefined') {
+          this.$Message.error('请安装MetaMask钱包插件');
+          this.walletConnected = false;
+          return false;
+        }
+        this.connectingWallet = true;
+        try {
+          // 检查是否已连接
+          let accounts = await window.ethereum.request({ method: 'eth_accounts' });
+          // 如果未连接，请求连接
+          if (!accounts || accounts.length === 0) {
+            this.$Message.info('正在请求连接MetaMask钱包...');
+            accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+          }
+          // 验证连接结果
+          if (accounts && accounts.length > 0) {
+            const account = accounts[0];
+            console.log('钱包已连接:', account);
+            // 初始化Web3
+            this.web3 = new Web3(window.ethereum);
+            this.contract = new this.web3.eth.Contract(abi, contractAddress);
+            // 验证钱包所有权（通过签名验证）
+            const verified = await this.verifyWalletOwnership(account);
+            if (!verified) {
+              this.$Message.error('钱包所有权验证失败，请重试');
+              this.walletConnected = false;
+              this.walletAddress = '';
+              return false;
+            }
+            // 更新钱包状态
+            this.walletConnected = true;
+            this.walletAddress = account;
+            // 显示连接信息
+            this.$Message.success(`MetaMask钱包已连接: ${account.substring(0, 6)}...${account.substring(account.length - 4)}`);
+            return true;
+          } else {
+            this.walletConnected = false;
+            this.walletAddress = '';
+            this.$Message.error('钱包连接失败，请重试');
+            return false;
+          }
+        } catch (error) {
+          console.error('钱包连接错误:', error);
+          this.walletConnected = false;
+          this.walletAddress = '';
+          this.$Message.error('钱包连接失败: ' + (error.message || '未知错误'));
+          return false;
+        } finally {
+          this.connectingWallet = false;
+        }
+      },
+      // 验证钱包所有权（通过签名）
+      async verifyWalletOwnership(account) {
+        try {
+          // 创建签名消息
+          const message = `验证钱包所有权，拍卖平台身份验证 ${new Date().toISOString()}`;
+          // 显示签名提示
+          this.$Message.info('请在MetaMask中确认签名请求，以验证钱包所有权');
+          // 请求用户签名
+          const signature = await window.ethereum.request({
+            method: 'personal_sign',
+            params: [
+              this.web3.utils.utf8ToHex(message),
+              account
+            ]
+          });
+          console.log('签名成功:', signature);
+          // 在实际应用中，这里可以将签名发送到后端进行验证
+          // 简化起见，我们只验证签名是否存在
+          if (signature) {
+            return true;
+          }
+          return false;
+        } catch (error) {
+          console.error('签名验证失败:', error);
+          return false;
+        }
       },
       getAttachments(attachmentPaths) {
         if (!attachmentPaths) return [];
@@ -291,12 +412,51 @@
           this.$Message.warning('请输入有效的价格')
           return
         }
+        // 再次验证钱包是否连接
+        if (!this.walletConnected) {
+          const walletConnected = await this.checkAndConnectWallet();
+          if (!walletConnected) {
+            this.$Message.warning('请先连接MetaMask钱包');
+            return;
+          }
+        }
+        // 拍卖确认签名
+        try {
+          // 创建签名消息
+          const message = `确认发布拍卖: 
+物品: ${this.selectedItem.title}
+价格: ${this.publishPrice} ETH
+时间: ${new Date().toISOString()}`;
+          this.$Message.info('请在MetaMask中确认操作签名');
+          // 请求用户签名
+          const signature = await window.ethereum.request({
+            method: 'personal_sign',
+            params: [
+              this.web3.utils.utf8ToHex(message),
+              this.walletAddress
+            ]
+          });
+          console.log('确认发布签名成功:', signature);
+          if (!signature) {
+            this.$Message.warning('未能完成签名确认，操作取消');
+            return;
+          }
+        } catch (error) {
+          console.error('签名确认失败:', error);
+          this.$Message.error('签名确认失败，操作取消');
+          return;
+        }
         this.publishing = true
         // 区块链交易结果标志
         let blockchainSuccess = false
         try {
           // 1. 准备基础数据
           const accounts = await this.web3.eth.getAccounts()
+          // 如果账户发生变化，更新状态
+          if (accounts[0] !== this.walletAddress) {
+            this.walletAddress = accounts[0];
+            this.$Message.info(`当前使用钱包地址: ${this.walletAddress.substring(0, 6)}...${this.walletAddress.substring(this.walletAddress.length - 4)}`);
+          }
           const account = accounts[0]
           // 准备上架元数据
           const metadata = {
@@ -364,6 +524,34 @@
       refreshData() {
         console.log('刷新用户竞品信息数据...')
         this.loadUserItems()
+      },
+      // MetaMask账户变化处理
+      handleAccountsChanged(accounts) {
+        if (accounts.length === 0) {
+          // 用户断开了MetaMask连接
+          this.walletConnected = false
+          this.walletAddress = ''
+          this.$Message.warning('MetaMask钱包已断开连接')
+        } else if (this.walletAddress && accounts[0] !== this.walletAddress) {
+          // 用户切换了账户
+          this.walletAddress = accounts[0]
+          this.$Message.info(`钱包账户已切换: ${this.walletAddress.substring(0, 6)}...${this.walletAddress.substring(this.walletAddress.length - 4)}`)
+        }
+      },
+      // 初始检查钱包状态
+      async checkInitialWalletState() {
+        if (window.ethereum) {
+          try {
+            const accounts = await window.ethereum.request({ method: 'eth_accounts' })
+            if (accounts.length > 0) {
+              this.walletConnected = true
+              this.walletAddress = accounts[0]
+              console.log('钱包已连接:', this.walletAddress)
+            }
+          } catch (error) {
+            console.error('检查钱包状态失败:', error)
+          }
+        }
       }
     }
   }
@@ -409,5 +597,38 @@
     margin-top: 20px;
     padding-top: 15px;
     border-top: 1px solid #e8eaec;
+  }
+  .wallet-status {
+    margin-bottom: 20px;
+    padding: 10px 15px;
+    border: 1px solid #e8eaec;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    background-color: #f8f8f9;
+  }
+  .wallet-status.connected {
+    border-color: #19be6b;
+    background-color: rgba(25, 190, 107, 0.1);
+  }
+  .wallet-status.disconnected {
+    border-color: #ff9900;
+    background-color: rgba(255, 153, 0, 0.1);
+  }
+  .wallet-status i {
+    margin-right: 8px;
+    font-size: 18px;
+  }
+  .wallet-status.connected i {
+    color: #19be6b;
+  }
+  .wallet-status.disconnected i {
+    color: #ff9900;
+  }
+  .connect-button {
+    margin-left: auto;
+    background-color: #2d8cf0;
+    border-color: #2d8cf0;
   }
 </style>
