@@ -84,7 +84,8 @@ public class AdminController {
      * 管理员添加新用户
      */
     @PostMapping("/users")
-    public ResponseEntity<?> addUser(@RequestParam String username, @RequestParam String password) {
+    public ResponseEntity<?> addUser(@RequestParam String username, @RequestParam String password,
+            @RequestParam(required = false) String email) {
         try {
             // 验证用户名是否已存在
             if (userService.isUsernameExists(username)) {
@@ -93,7 +94,14 @@ public class AdminController {
                 return ResponseEntity.badRequest().body(error);
             }
 
-            User user = userService.addUser(username, password);
+            User user;
+            // 如果提供了邮箱，使用提供的邮箱，否则使用默认邮箱
+            if (email != null && !email.isEmpty()) {
+                user = userService.register(username, password, email);
+            } else {
+                user = userService.addUser(username, password);
+            }
+
             if (user != null) {
                 return ResponseEntity.ok(user);
             } else {

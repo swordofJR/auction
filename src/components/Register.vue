@@ -1,1 +1,179 @@
-<template>  <div class="register-page">    <div class="register-box">      <h2>用户注册</h2>      <form @submit.prevent="handleRegister">        <div class="form-group">          <label>用户名</label>          <input v-model="username" type="text" required />        </div>        <div class="form-group">          <label>密码</label>          <input v-model="password" type="password" required />        </div>        <div class="form-group">          <label>确认密码</label>          <input v-model="confirmPassword" type="password" required />        </div>        <div class="form-group">          <button type="submit" :disabled="loading || !isValid">            {{ loading ? '注册中...' : '注册' }}          </button>        </div>        <div class="form-group login-link">          <span>已有账号？</span>          <router-link to="/login">登录</router-link>        </div>        <div v-if="error" class="error">{{ error }}</div>      </form>    </div>  </div></template><script>import axios from 'axios'export default {  name: 'Register',  data() {    return {      username: '',      password: '',      confirmPassword: '',      error: '',      loading: false    }  },  computed: {    isValid() {      return this.username && this.password && this.password === this.confirmPassword    }  },  methods: {    handleRegister() {      if (!this.isValid) {        if (!this.username || !this.password) {          this.error = '请输入用户名和密码'        } else if (this.password !== this.confirmPassword) {          this.error = '两次输入的密码不一致'        }        return      }      this.error = ''      this.loading = true      // 创建表单数据并添加默认值      const params = new URLSearchParams()      params.append('username', this.username)      params.append('password', this.password)      // 为email提供默认值（使用用户名+默认域名）      params.append('email', `${this.username}@example.com`)      // 添加可能需要的其他默认字段      params.append('enabled', 'true')      params.append('accountNonExpired', 'true')      params.append('credentialsNonExpired', 'true')      params.append('accountNonLocked', 'true')      axios.post('/api/user/register', params, {        headers: {          'Content-Type': 'application/x-www-form-urlencoded'        }      })        .then(response => {          console.log('注册成功:', response.data)          this.$Message.success('注册成功，请登录')          this.$router.push('/login')        })        .catch(error => {          console.error('注册失败:', error)          if (error.response && error.response.data) {            console.error('错误详情:', error.response.data)            this.error = error.response.data.message || '注册失败，请稍后重试'          } else {            this.error = '注册失败，服务器连接异常'          }        })        .finally(() => {          this.loading = false        })    }  }}</script><style scoped>.register-page {  width: 100vw;  height: 100vh;  display: flex;  align-items: center;  justify-content: center;  background: #f5f6fa;}.register-box {  background: #fff;  padding: 40px 30px;  border-radius: 8px;  box-shadow: 0 2px 8px rgba(0,0,0,0.1);  width: 350px;}.register-box h2 {  text-align: center;  margin-bottom: 30px;  color: #333;}.form-group {  margin-bottom: 20px;}.form-group label {  display: block;  margin-bottom: 8px;  color: #333;  font-weight: 500;}.form-group input {  width: 100%;  padding: 10px 12px;  border: 1px solid #ddd;  border-radius: 4px;  font-size: 16px;  transition: border-color 0.3s;}.form-group input:focus {  border-color: #409eff;  outline: none;}button[type="submit"] {  width: 100%;  padding: 12px;  background: #409eff;  color: #fff;  border: none;  border-radius: 4px;  font-size: 16px;  cursor: pointer;  transition: background-color 0.3s;}button[type="submit"]:hover:not(:disabled) {  background: #66b1ff;}button[type="submit"]:disabled {  background: #a0cfff;  cursor: not-allowed;}.error {  color: #f56c6c;  text-align: center;  margin-top: 10px;  font-size: 14px;}.login-link {  text-align: center;  font-size: 14px;}.login-link a {  color: #409eff;  margin-left: 5px;  text-decoration: none;}.login-link a:hover {  text-decoration: underline;}</style> 
+<template>
+  <div class="register-page">
+    <div class="register-box">
+      <h2>用户注册</h2>
+      <form @submit.prevent="handleRegister">
+        <div class="form-group">
+          <label>用户名</label>
+          <input v-model="username" type="text" required />
+        </div>
+        <div class="form-group">
+          <label>邮箱</label>
+          <input v-model="email" type="email" required />
+        </div>
+        <div class="form-group">
+          <label>密码</label>
+          <input v-model="password" type="password" required />
+        </div>
+        <div class="form-group">
+          <label>确认密码</label>
+          <input v-model="confirmPassword" type="password" required />
+        </div>
+        <div class="form-group">
+          <button type="submit" :disabled="loading || !isValid">
+            {{ loading ? '注册中...' : '注册' }}
+          </button>
+        </div>
+        <div class="form-group login-link">
+          <span>已有账号？</span>
+          <router-link to="/login">登录</router-link>
+        </div>
+        <div v-if="error" class="error">{{ error }}</div>
+      </form>
+    </div>
+  </div>
+</template>
+<script>
+import axios from 'axios'
+export default {
+  name: 'Register',
+  data() {
+    return {
+      username: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+      error: '',
+      loading: false
+    }
+  },
+  computed: {
+    isValid() {
+      return this.username && this.email && this.password && this.password === this.confirmPassword
+    }
+  },
+  methods: {
+    handleRegister() {
+      if (!this.isValid) {
+        if (!this.username || !this.email || !this.password) {
+          this.error = '请输入用户名、邮箱和密码'
+        } else if (this.password !== this.confirmPassword) {
+          this.error = '两次输入的密码不一致'
+        }
+        return
+      }
+      this.error = ''
+      this.loading = true
+      const params = new URLSearchParams()
+      params.append('username', this.username)
+      params.append('email', this.email)
+      params.append('password', this.password)
+      params.append('enabled', 'true')
+      params.append('accountNonExpired', 'true')
+      params.append('credentialsNonExpired', 'true')
+      params.append('accountNonLocked', 'true')
+      axios.post('/api/user/register', params, {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      })
+        .then(response => {
+          console.log('注册成功:', response.data)
+          this.$Message.success('注册成功，请登录')
+          this.$router.push('/login')
+        })
+        .catch(error => {
+          console.error('注册失败:', error)
+          if (error.response && error.response.data) {
+            console.error('错误详情:', error.response.data)
+            this.error = error.response.data.message || '注册失败，请稍后重试'
+          } else {
+            this.error = '注册失败，服务器连接异常'
+          }
+        })
+        .finally(() => {
+          this.loading = false
+        })
+    }
+  }
+}
+</script>
+<style scoped>
+.register-page {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f6fa;
+}
+.register-box {
+  background: #fff;
+  padding: 40px 30px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  width: 350px;
+}
+.register-box h2 {
+  text-align: center;
+  margin-bottom: 30px;
+  color: #333;
+}
+.form-group {
+  margin-bottom: 20px;
+}
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  color: #333;
+  font-weight: 500;
+}
+.form-group input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 16px;
+  transition: border-color 0.3s;
+}
+.form-group input:focus {
+  border-color: #409eff;
+  outline: none;
+}
+button[type="submit"] {
+  width: 100%;
+  padding: 12px;
+  background: #409eff;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+button[type="submit"]:hover:not(:disabled) {
+  background: #66b1ff;
+}
+button[type="submit"]:disabled {
+  background: #a0cfff;
+  cursor: not-allowed;
+}
+.error {
+  color: #f56c6c;
+  text-align: center;
+  margin-top: 10px;
+  font-size: 14px;
+}
+.login-link {
+  text-align: center;
+  font-size: 14px;
+}
+.login-link a {
+  color: #409eff;
+  margin-left: 5px;
+  text-decoration: none;
+}
+.login-link a:hover {
+  text-decoration: underline;
+}
+</style> 

@@ -26,15 +26,14 @@ public class UserService {
         return user != null;
     }
 
-    public User register(String username, String password) {
+    public User register(String username, String password, String email) {
         // 创建新用户对象
         User newUser = new User();
         newUser.setUsername(username);
         newUser.setPassword(password);
+        newUser.setEmail(email);
         // 设置默认钱包地址
         newUser.setAddress("0x0000000000000000000000000000000000000000");
-        // 设置默认哈希值
-        // newUser.setHash(username + "hash");
         // 设置删除标记为0（未删除）
         newUser.setDeleted(0);
         // 设置创建时间和更新时间
@@ -72,7 +71,9 @@ public class UserService {
         if (isUsernameExists(username)) {
             return null;
         }
-        return register(username, password);
+        // 为管理员添加的用户生成默认邮箱
+        String email = username + "@default.com";
+        return register(username, password, email);
     }
 
     // 逻辑删除用户

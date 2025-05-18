@@ -18,6 +18,9 @@
         <FormItem label="用户名" prop="username">
           <Input v-model="newUser.username" placeholder="请输入用户名"></Input>
         </FormItem>
+        <FormItem label="邮箱" prop="email">
+          <Input v-model="newUser.email" placeholder="请输入邮箱"></Input>
+        </FormItem>
         <FormItem label="密码" prop="password">
           <Input type="password" v-model="newUser.password" placeholder="请输入密码"></Input>
         </FormItem>
@@ -52,6 +55,7 @@ export default {
       modalLoading: false,
       newUser: {
         username: '',
+        email: '',
         password: '',
         confirmPassword: ''
       },
@@ -59,6 +63,10 @@ export default {
         username: [
           { required: true, message: '请输入用户名', trigger: 'blur' },
           { min: 3, message: '用户名至少3个字符', trigger: 'blur' }
+        ],
+        email: [
+          { required: true, message: '请输入邮箱', trigger: 'blur' },
+          { type: 'email', message: '请输入有效的邮箱地址', trigger: 'blur' }
         ],
         password: [
           { required: true, message: '请输入密码', trigger: 'blur' },
@@ -190,6 +198,7 @@ export default {
     showAddUserModal() {
       this.newUser = {
         username: '',
+        email: '',
         password: '',
         confirmPassword: ''
       }
@@ -205,6 +214,7 @@ export default {
           this.modalLoading = true
           const params = new URLSearchParams()
           params.append('username', this.newUser.username)
+          params.append('email', this.newUser.email)
           params.append('password', this.newUser.password)
           axios.post('/api/admin/users', params)
             .then(response => {

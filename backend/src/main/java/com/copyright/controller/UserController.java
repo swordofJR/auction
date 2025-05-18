@@ -32,7 +32,8 @@ public class UserController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestParam String username, @RequestParam String password) {
+    public ResponseEntity<?> register(@RequestParam String username, @RequestParam String password,
+            @RequestParam String email) {
         try {
             // 验证用户名是否已存在
             if (userService.isUsernameExists(username)) {
@@ -41,7 +42,7 @@ public class UserController {
                 return ResponseEntity.badRequest().body(error);
             }
 
-            User user = userService.register(username, password);
+            User user = userService.register(username, password, email);
             if (user != null) {
                 Map<String, Object> response = new HashMap<>();
                 response.put("id", user.getId());
