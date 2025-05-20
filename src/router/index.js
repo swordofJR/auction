@@ -16,6 +16,7 @@ import Loading from '@/pages/Loading'
 import AllCopyrights from '@/pages/AllCopyrights'
 import UserManagement from '@/pages/UserManagement'
 import Marketplace from '@/pages/Marketplace'
+import Traceability from '@/pages/Traceability'
 
 Vue.use(Router)
 
@@ -114,6 +115,16 @@ const router = new Router({
                     meta: {
                         keepAlive: true,
                         title: '拍卖市场',
+                        requiresAuth: true
+                    }
+                },
+                {
+                    path: 'traceability',
+                    name: 'Traceability',
+                    component: Traceability,
+                    meta: {
+                        keepAlive: true,
+                        title: '竞品溯源',
                         requiresAuth: true
                     }
                 },

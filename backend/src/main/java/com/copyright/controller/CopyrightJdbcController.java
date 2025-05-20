@@ -310,6 +310,17 @@ public class CopyrightJdbcController {
     }
 
     /**
+     * 根据关键词搜索竞品
+     */
+    @GetMapping("/search")
+    public ResponseEntity<List<AuctionItems>> searchByKeyword(@RequestParam String keyword) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+        return ResponseEntity.ok(copyrightJdbcService.searchByKeyword(keyword));
+    }
+
+    /**
      * 获取版权详情
      * 注意：这个端点必须放在最后，避免与其他路径冲突
      */
@@ -321,4 +332,5 @@ public class CopyrightJdbcController {
         }
         return ResponseEntity.notFound().build();
     }
+
 }

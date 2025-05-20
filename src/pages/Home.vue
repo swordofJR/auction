@@ -29,6 +29,12 @@
                 拍卖市场  
               </router-link>
           </Menu-item>
+          <Menu-item name="Traceability">
+              <router-link to="/traceability">
+                <i class="fa fa-search"></i>
+                竞品溯源  
+              </router-link>
+          </Menu-item>
           <Menu-item name="BasicTable" v-if="isUser && !isAdmin">
               <router-link to="/basic-table">
                 <i class="fa fa-id-card"></i>

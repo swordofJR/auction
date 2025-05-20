@@ -263,6 +263,18 @@ public class CopyrightJdbcService {
         });
     }
 
+    /**
+     * 根据关键词搜索竞品
+     * 
+     * @param keyword 搜索关键词
+     * @return 匹配的竞品列表
+     */
+    public List<AuctionItems> searchByKeyword(String keyword) {
+        String searchKeyword = "%" + keyword + "%";
+        String sql = "SELECT * FROM auction_items WHERE title LIKE ? OR description LIKE ? OR category LIKE ? ORDER BY id DESC";
+        return jdbcTemplate.query(sql, new CopyrightRowMapper(), searchKeyword, searchKeyword, searchKeyword);
+    }
+
     public AuctionItems getCopyright(Long id) {
         String sql = "SELECT * FROM auction_items WHERE id = ?";
         List<AuctionItems> auctionItems = jdbcTemplate.query(sql, new CopyrightRowMapper(), id);
