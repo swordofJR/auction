@@ -5,7 +5,7 @@
     </div>
     <div class="panel-body">
       <Row type="flex" justify="space-between" class="control">
-        <div class="table-style">
+        <!-- <div class="table-style">
           <h3>条纹</h3>
           <i-switch v-model="showStripe" style="margin: 0 30px 0 10px"></i-switch>
           <h3>字体</h3>
@@ -14,11 +14,11 @@
             <Radio label="default">默认</Radio>
             <Radio label="small">小号</Radio>
           </Radio-group>
-        </div>
-        <div class="search-bar">
+        </div> -->
+        <!-- <div class="search-bar">
           <Input placeholder="Please enter ..." v-model="keyword" style="width: 300px"></Input>
           <Button type="ghost" @click="search"><i class="fa fa-search"></i></Button>
-        </div>
+        </div> -->
       </Row>
       <div class="edit" v-if="type === 'edit'">
           <Button @click="modalAdd = true" ><i class="fa fa-plus"></i> Add</Button>
