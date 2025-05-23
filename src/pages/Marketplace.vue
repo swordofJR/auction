@@ -48,6 +48,8 @@
         <div class="item-details-info">
           <h2>{{ selectedItem.title }}</h2>
           <div class="seller-info">
+            <span><strong>竞品ID:</strong> {{ selectedItem.id }}</span>
+            <Divider type="vertical" />
             <span><strong>卖家:</strong> {{ selectedItem.username || '未知用户' }}</span>
           </div>
           <Divider />
